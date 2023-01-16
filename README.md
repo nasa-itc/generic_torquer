@@ -32,5 +32,9 @@ Refer to the file `fsw/src/generic_torquer_app_msg.h` for the Generic_torquer ap
 The generic_torquer is relatively simple in outline; it takes as input only a value
 for the current (in amperes) and returns a value for the magnetic field generated.
 
+*it is possible that we will need to provide more calculation/return values than just
+*a magnetic field; if so, there might need to be additional facts about the location or
+*arrangement of the magnetorquers and such.
+
 ## Versioning
 We use [SemVer](http://semver.org/) for versioning. For the versions available, see the tags on this repository.
