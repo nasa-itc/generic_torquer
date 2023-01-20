@@ -15,7 +15,7 @@ A NOS3 simulation is available which uses a 42 data provider.
 The +z axis is down the length of the magnetorquer (in the same direction as the coil). The +x and +y axes are perpendicular to the coil, and together with the +z axis make an orthogonal, right-handed coordinate system.
 
 ## Communications
-The NOS3 Generic Torquer communicates by means of the hardware library (hwlib) defined in https://github.com/nasa-itc/hwlib/tree/dev. Specifically, it makes use of two functions from the torquer library at https://github.com/nasa-itc/hwlib/blob/dev/fsw/public_inc/libtrq.h to send commands to the torquers.
+The NOS3 Generic Torquer communicates by means of the hardware library (hwlib) defined in https://github.com/nasa-itc/hwlib/tree/dev. Specifically, it makes use of two functions from the torquer library at https://github.com/nasa-itc/hwlib/blob/dev/fsw/public_inc/libtrq.h to send commands to the torquers. These commands wrap the specific functionality of an FPGA or other interface which is used to send a PWM signal.
 
 
 ### Commands
