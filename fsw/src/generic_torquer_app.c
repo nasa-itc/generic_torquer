@@ -34,6 +34,7 @@ static void  GENERIC_TORQUER_ProcessGroundCommand(CFE_SB_MsgPtr_t Msg);
 static int32 GENERIC_TORQUER_ReportHousekeeping(const CFE_SB_CmdHdr_t *Msg);
 static int32 GENERIC_TORQUER_ResetCounters(const GENERIC_TORQUER_ResetCounters_t *Msg);
 static int32 GENERIC_TORQUER_Noop(const GENERIC_TORQUER_Noop_t *Msg);
+
 static bool GENERIC_TORQUER_VerifyCmdLength(CFE_SB_MsgPtr_t Msg, uint16 ExpectedLength);
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *  * *  * * * * **/

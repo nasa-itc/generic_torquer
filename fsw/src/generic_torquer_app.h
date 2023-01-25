@@ -14,9 +14,15 @@
 */
 #include "generic_torquer_app_msg.h"
 #include "generic_torquer_app_events.h"
+#include "generic_torquer_app_version.h"
+#include "generic_torquer_app_platform_cfg.h"
+#include "generic_torquer_app_perfids.h"
+#include "generic_torquer_app_msgids.h"
+
 #include "cfe_sb.h"
 #include "cfe_evs.h"
 #include "hwlib.h"
+
 
 /***********************************************************************/
 #define GENERIC_TORQUER_PIPE_DEPTH 32 /* Depth of the Command Pipe for Application */
@@ -24,6 +30,8 @@
 /************************************************************************
 ** Type Definitions
 *************************************************************************/
+#define TRQ_DISABLED              0
+#define TRQ_ENABLED               1
 
 /*
  * Buffer to hold telemetry data prior to sending
@@ -50,6 +58,9 @@ typedef struct
     */
     CFE_SB_PipeId_t CommandPipe;
     CFE_SB_MsgPtr_t MsgPtr;
+    uint32 RunStatus;                   /* App run status for controlling the application state */
+    uint32 MagTrqMutex;                 /* Mutex between trq and mag */
+
 
     /*
     ** Initialization data (not reported in housekeeping)...
@@ -58,6 +69,13 @@ typedef struct
     uint16 PipeDepth;
 
     CFE_EVS_BinFilter_t EventFilters[GENERIC_TORQUER_EVENT_COUNTS];
+
+    /* 
+    ** Device protocols
+    */ 
+    trq_info_t trqDevice[3];
+    gpio_info_t trqEnable[3];
+
 
 } GENERIC_TORQUER_AppData_t;
 
@@ -69,6 +87,12 @@ typedef struct
 **       functions are not called from any other source module.
 */
 void  GENERIC_TORQUER_AppMain(void);
+
+void  GENERIC_TORQUER_Enable_Disable(CFE_SB_MsgPtr_t msg);
+void  GENERIC_TORQUER_Direction(CFE_SB_MsgPtr_t msg);
+void  GENERIC_TORQUER_Time_High(CFE_SB_MsgPtr_t msg);
+void  GENERIC_TORQUER_Percent_On(CFE_SB_MsgPtr_t msg);
+void  GENERIC_TORQUER_3Axis_Pct_On(CFE_SB_MsgPtr_t msg);
 
 #endif /* _generic_torquer_app_h_ */
 
