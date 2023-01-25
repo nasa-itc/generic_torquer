@@ -37,16 +37,51 @@ static int32 GENERIC_TORQUER_Noop(const GENERIC_TORQUER_Noop_t *Msg);
 
 static bool GENERIC_TORQUER_VerifyCmdLength(CFE_SB_MsgPtr_t Msg, uint16 ExpectedLength);
 
+/*
+** Global Data
+*/
+TRQ_AppData_t TRQ_AppData;
+
+static CFE_EVS_BinFilter_t  TRQ_EventFilters[] =
+{   /* Event ID    mask */
+    {TRQ_RESERVED_EID,             0x0000},
+    {TRQ_STARTUP_INF_EID,          0x0000},
+    {TRQ_INVALID_MSGID_ERR_EID,    0x0000},
+    {TRQ_LEN_ERR_EID,              0x0000},
+    {TRQ_PIPE_ERR_EID,             0x0000},
+    {TRQ_SUB_CMD_ERR_EID,          0x0000},
+    {TRQ_SUB_REQ_HK_ERR_EID,       0x0000},
+    {TRQ_SUB_REQ_DEVICE_ERR_EID,   0x0000},
+    {TRQ_UART_ERR_EID,             0x0000},
+    {TRQ_COMMAND_ERR_EID,          0x0000},
+    {TRQ_COMMANDNOP_INF_EID,       0x0000},
+    {TRQ_COMMANDRST_INF_EID,       0x0000},
+    {TRQ_COMMANDENABLE_INF_EID,    0x0000},
+    {TRQ_COMMANDDISABLE_INF_EID,   0x0000},
+    {TRQ_COMMANDNUM_ERR_EID,       0x0000},
+    {TRQ_COMMANDDIRECTION_INF_EID, 0x0000},
+    {TRQ_COMMANDDIRECTION_ERR_EID, 0x0000},
+    {TRQ_COMMANDHIGH_INF_EID,      0x0000},
+    {TRQ_COMMANDHIGH_ERR_EID,      0x0000},
+    {TRQ_COMMANDPERCENT_INF_EID,   0x0000},
+    {TRQ_COMMANDPERCENT_ERR_EID,   0x0000},
+    {TRQ_COMMANDENABLED_ERR_EID,   0x0000},
+};
+
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *  * *  * * * * **/
 /*                                                                            */
-/* Name:  GENERIC_TORQUER_AppMain()                                                    */
+/* Name:  GENERIC_TORQUER_AppMain()                                           */
 /* Purpose:                                                                   */
 /*        Application entry point and main process loop                       */
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *  * *  * * * * **/
 void GENERIC_TORQUER_AppMain(void)
 {
-    int32 status;
+    int32 status = OS_SUCCESS;
+    uint32 local_run = CFE_ES_APP_RUN;
+    uint8_t i;
+
 
     /*
     ** Register the app with Executive services
@@ -109,6 +144,15 @@ void GENERIC_TORQUER_AppMain(void)
     }
 
     /*
+    ** Close Devices
+    */
+    for(i = 0; i < 3; i++)
+    {
+        trq_close(&TRQ_AppData.trqDevice[i]);
+        gpio_close(&TRQ_AppData.trqEnable[i]);
+    }
+
+    /*
     ** Performance Log Exit Stamp
     */
     CFE_ES_PerfLogExit(GENERIC_TORQUER_APP_PERF_ID);
@@ -127,7 +171,8 @@ void GENERIC_TORQUER_AppMain(void)
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 static int32 GENERIC_TORQUER_AppInit(void)
 {
-    int32 status;
+    int32 status = OS_SUCCESS;
+    uint8_t i;
 
     RunStatus = CFE_ES_RunStatus_APP_RUN;
 
@@ -214,12 +259,85 @@ static int32 GENERIC_TORQUER_AppInit(void)
         return (status);
     }
 
-    CFE_EVS_SendEvent(GENERIC_TORQUER_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION,
+    
+    /* ADDED SECTION */
+    /*
+    ** Initialize GENERIC_TORQUER interfaces
+    */ 
+    TRQ_AppData.HkTelemetryPkt.TrqPeriod = TRQ_PERIOD;
+    for(i = 0; i < 3; i++)
+    {
+        TRQ_AppData.trqDevice[i].trq_num = i;
+        TRQ_AppData.trqDevice[i].timer_period_ns = TRQ_PERIOD;
+        TRQ_AppData.trqDevice[i].enabled = FALSE;
+
+        status = trq_init(&TRQ_AppData.trqDevice[i]);
+        if (status != TRQ_SUCCESS)
+        {
+            CFE_EVS_SendEvent(TRQ_INIT_TRQ_ERR_EID, CFE_EVS_ERROR, "TRQ: device %d initialization error %d", i, status);
+        }
+    }
+
+    /*
+    ** Initialize GPIO interfaces
+    */ 
+    TRQ_AppData.trqEnable[0].pin = TRQ1_ENABLE;
+    TRQ_AppData.trqEnable[0].direction = GPIO_OUTPUT;
+    TRQ_AppData.trqEnable[1].pin = TRQ2_ENABLE;
+    TRQ_AppData.trqEnable[1].direction = GPIO_OUTPUT;
+    TRQ_AppData.trqEnable[2].pin = TRQ3_ENABLE;
+    TRQ_AppData.trqEnable[2].direction = GPIO_OUTPUT;
+    for(i = 0; i < 3; i++)
+    {
+        status = gpio_init(&TRQ_AppData.trqEnable[i]);
+        if(status != GPIO_SUCCESS)
+        {
+            CFE_EVS_SendEvent(TRQ_INIT_GPIO_ERR_EID, CFE_EVS_ERROR, "TRQ: device %d initialization error %d", i, status);
+            return -1; 
+        }
+
+        status = gpio_write(&TRQ_AppData.trqEnable[i], TRQ_DISABLED);
+        if(status != GPIO_SUCCESS)
+        {
+            CFE_EVS_SendEvent(TRQ_INIT_GPIO_ERR_EID, CFE_EVS_ERROR, "TRQ: device %d set disabled error %d", i, status);
+            return -1; 
+        }
+    }
+
+    /*
+    ** Create Mutex for Magnetometer and Torquer
+    */
+    status = OS_MutSemCreate(&TRQ_AppData.MagTrqMutex, ADCS_MAG_TRQ_MUTEX, 0);
+    if(status != OS_SUCCESS)
+    {
+        CFE_EVS_SendEvent(TRQ_INIT_MUTEX_ERR_EID, CFE_EVS_ERROR, "TRQ: Error creating Mag Trq Mutex %d", i, status);
+        return status;
+    }
+
+    /* 
+    ** Always reset all counters during application initialization 
+    */
+    TRQ_ResetCounters();
+
+    /* END ADDED SECTION */
+
+    /* 
+     ** Send an information event that the app has initialized. 
+     ** This is useful for debugging the loading of individual applications.
+     */
+    status = CFE_EVS_SendEvent(GENERIC_TORQUER_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION,
                       "GENERIC_TORQUER App Initialized. Version %d.%d.%d.%d",
                       GENERIC_TORQUER_APP_MAJOR_VERSION,
                       GENERIC_TORQUER_APP_MINOR_VERSION,
                       GENERIC_TORQUER_APP_REVISION,
                       GENERIC_TORQUER_APP_MISSION_REV);
+
+    if (status != CFE_SUCCESS)
+    {
+        CFE_ES_WriteToSysLog("TRQ: error sending initialization event: 0x%08X\n", (unsigned int) status);
+    }
+
+
 
     return (CFE_SUCCESS);
 
