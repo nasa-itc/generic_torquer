@@ -19,6 +19,7 @@
 #include "generic_torquer_app_msgids.h"
 #include "generic_torquer_app_perfids.h"
 #include "generic_torquer_device.h"
+
 #include "cfe_error.h"
 
 /*

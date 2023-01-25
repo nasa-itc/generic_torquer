@@ -16,6 +16,7 @@
 #include "generic_torquer_app_events.h"
 #include "cfe_sb.h"
 #include "cfe_evs.h"
+#include "hwlib.h"
 
 /***********************************************************************/
 #define GENERIC_TORQUER_PIPE_DEPTH 32 /* Depth of the Command Pipe for Application */

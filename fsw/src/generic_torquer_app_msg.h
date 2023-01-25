@@ -29,6 +29,14 @@
 #define GENERIC_TORQUER_SEND_DEV_HK_CC         7
 #define GENERIC_TORQUER_SEND_DEV_DATA_CC       8
 
+/* Added stuff from previous torquers */
+#define TRQ_ENABLE_CC               9
+#define TRQ_DISABLE_CC              10
+#define TRQ_DIRECTION_CC            11
+#define TRQ_TIME_HIGH_CC            12
+#define TRQ_PERCENT_ON_CC           13
+#define TRQ_3AXIS_PCT_ON_CC         14
+
 /*************************************************************************/
 
 /*
@@ -75,6 +83,81 @@ typedef struct
     uint8    RawCmd[5];
 } GENERIC_TORQUER_Raw_cmd_t;
 
+/* Added section of things */
+
+/*
+** Enable / Disable command
+*/
+typedef struct
+{
+    uint8   CmdHeader[CFE_SB_CMD_HDR_SIZE];
+    uint8   TrqNum;
+
+} OS_PACK GENERIC_TORQUER_Enable_Disable_Cmd_t;
+#define TRQ_ENABLE_DISABLE_CMD_LEN sizeof(TRQ_Enable_Disable_Cmd_t)
+
+/*
+** Direction command
+*/
+typedef struct
+{
+    uint8   CmdHeader[CFE_SB_CMD_HDR_SIZE];
+    uint8   TrqNum;
+    uint8   Direction;
+
+} OS_PACK GENERIC_TORQUER_Direction_Cmd_t;
+#define TRQ_DIRECTION_CMD_LEN sizeof(TRQ_Direction_Cmd_t)
+
+/*
+** Time high command
+*/
+typedef struct
+{
+    uint8   CmdHeader[CFE_SB_CMD_HDR_SIZE];
+    uint8   TrqNum;
+    uint32  TimeHigh;
+
+} OS_PACK GENERIC_TORQUER_Time_High_Cmd_t;
+#define TRQ_TIME_HIGH_CMD_LEN sizeof(TRQ_Time_High_Cmd_t)
+
+/*
+** Percent on command
+*/
+typedef struct
+{
+    uint8   CmdHeader[CFE_SB_CMD_HDR_SIZE];
+    uint8   TrqNum;
+    uint8   Direction;
+    uint8   PercentOn;
+
+} OS_PACK GENERIC_TORQUER_Percent_On_Cmd_t;
+#define TRQ_PERCENT_ON_CMD_LEN sizeof(TRQ_Percent_On_Cmd_t)
+
+/*
+** 3 Axis Percent on command
+**    Sent from the ADCS Application
+*/
+typedef struct
+{
+    uint8   CmdHeader[CFE_SB_CMD_HDR_SIZE];
+    GENERIC_TORQUER_Percent_On_Cmd_t    TrqPctOnCmd[3];
+
+} OS_PACK GENERIC_TORQUER_3Axis_Pct_On_Cmd_t;
+#define TRQ_3AXIS_PCT_ON_CMD_LEN sizeof(TRQ_3Axis_Pct_On_Cmd_t)
+
+/*
+** GENERIC_TORQUER info struct
+*/
+typedef struct
+{
+    uint8   Enabled;
+    uint8   Direction;
+    uint32  TimeHigh;
+
+} OS_PACK GENERIC_TORQUER_Info_t;
+#define TRQ_INFO_LEN sizeof(TRQ_Info_t)
+
+
 /*************************************************************************/
 /*
 ** Type definition (GENERIC_TORQUER App housekeeping)
@@ -88,7 +171,10 @@ typedef struct
 
 typedef struct
 {
-    uint8                  TlmHeader[CFE_SB_TLM_HDR_SIZE];
+    uint8   TlmHeader[CFE_SB_TLM_HDR_SIZE];
+    uint8   CommandErrorCount;
+    uint8   CommandCount;
+    uint32  TrqPeriod;
     GENERIC_TORQUER_HkTlm_Payload_t Payload;
 
 } OS_PACK GENERIC_TORQUER_HkTlm_t;
