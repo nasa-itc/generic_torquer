@@ -264,42 +264,42 @@ static int32 GENERIC_TORQUER_AppInit(void)
     /*
     ** Initialize GENERIC_TORQUER interfaces
     */ 
-    TRQ_AppData.HkTelemetryPkt.TrqPeriod = TRQ_PERIOD;
+    GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqPeriod = TRQ_PERIOD;
     for(i = 0; i < 3; i++)
     {
-        TRQ_AppData.trqDevice[i].trq_num = i;
-        TRQ_AppData.trqDevice[i].timer_period_ns = TRQ_PERIOD;
-        TRQ_AppData.trqDevice[i].enabled = FALSE;
+        GENERIC_TORQUER_AppData.trqDevice[i].trq_num = i;
+        GENERIC_TORQUER_AppData.trqDevice[i].timer_period_ns = TRQ_PERIOD;
+        GENERIC_TORQUER_AppData.trqDevice[i].enabled = FALSE;
 
-        status = trq_init(&TRQ_AppData.trqDevice[i]);
+        status = trq_init(&GENERIC_TORQUER_AppData.trqDevice[i]);
         if (status != TRQ_SUCCESS)
         {
-            CFE_EVS_SendEvent(TRQ_INIT_TRQ_ERR_EID, CFE_EVS_ERROR, "TRQ: device %d initialization error %d", i, status);
+            CFE_EVS_SendEvent(GENERIC_TORQUER_INIT_TRQ_ERR_EID, CFE_EVS_ERROR, "GENERIC_TORQUER: device %d initialization error %d", i, status);
         }
     }
 
     /*
     ** Initialize GPIO interfaces
     */ 
-    TRQ_AppData.trqEnable[0].pin = TRQ1_ENABLE;
-    TRQ_AppData.trqEnable[0].direction = GPIO_OUTPUT;
-    TRQ_AppData.trqEnable[1].pin = TRQ2_ENABLE;
-    TRQ_AppData.trqEnable[1].direction = GPIO_OUTPUT;
-    TRQ_AppData.trqEnable[2].pin = TRQ3_ENABLE;
-    TRQ_AppData.trqEnable[2].direction = GPIO_OUTPUT;
+    GENERIC_TORQUER_AppData.trqEnable[0].pin = TRQ1_ENABLE;
+    GENERIC_TORQUER_AppData.trqEnable[0].direction = GPIO_OUTPUT;
+    GENERIC_TORQUER_AppData.trqEnable[1].pin = TRQ2_ENABLE;
+    GENERIC_TORQUER_AppData.trqEnable[1].direction = GPIO_OUTPUT;
+    GENERIC_TORQUER_AppData.trqEnable[2].pin = TRQ3_ENABLE;
+    GENERIC_TORQUER_AppData.trqEnable[2].direction = GPIO_OUTPUT;
     for(i = 0; i < 3; i++)
     {
-        status = gpio_init(&TRQ_AppData.trqEnable[i]);
+        status = gpio_init(&GENERIC_TORQUER_AppData.trqEnable[i]);
         if(status != GPIO_SUCCESS)
         {
-            CFE_EVS_SendEvent(TRQ_INIT_GPIO_ERR_EID, CFE_EVS_ERROR, "TRQ: device %d initialization error %d", i, status);
+            CFE_EVS_SendEvent(GENERIC_TORQUER_INIT_GPIO_ERR_EID, CFE_EVS_ERROR, "GENERIC_TORQUER: device %d initialization error %d", i, status);
             return -1; 
         }
 
-        status = gpio_write(&TRQ_AppData.trqEnable[i], TRQ_DISABLED);
+        status = gpio_write(&GENERIC_TORQUER_AppData.trqEnable[i], TRQ_DISABLED);
         if(status != GPIO_SUCCESS)
         {
-            CFE_EVS_SendEvent(TRQ_INIT_GPIO_ERR_EID, CFE_EVS_ERROR, "TRQ: device %d set disabled error %d", i, status);
+            CFE_EVS_SendEvent(GENERIC_TORQUER_INIT_GPIO_ERR_EID, CFE_EVS_ERROR, "GENERIC_TORQUER: device %d set disabled error %d", i, status);
             return -1; 
         }
     }
@@ -307,17 +307,17 @@ static int32 GENERIC_TORQUER_AppInit(void)
     /*
     ** Create Mutex for Magnetometer and Torquer
     */
-    status = OS_MutSemCreate(&TRQ_AppData.MagTrqMutex, ADCS_MAG_TRQ_MUTEX, 0);
+    status = OS_MutSemCreate(&GENERIC_TORQUER_AppData.MagTrqMutex, ADCS_MAG_TRQ_MUTEX, 0);
     if(status != OS_SUCCESS)
     {
-        CFE_EVS_SendEvent(TRQ_INIT_MUTEX_ERR_EID, CFE_EVS_ERROR, "TRQ: Error creating Mag Trq Mutex %d", i, status);
+        CFE_EVS_SendEvent(GENERIC_TORQUER_INIT_MUTEX_ERR_EID, CFE_EVS_ERROR, "GENERIC_TORQUER: Error creating Mag Trq Mutex %d", i, status);
         return status;
     }
 
     /* 
     ** Always reset all counters during application initialization 
     */
-    TRQ_ResetCounters();
+    GENERIC_TORQUER_ResetCounters();
 
     /* END ADDED SECTION */
 

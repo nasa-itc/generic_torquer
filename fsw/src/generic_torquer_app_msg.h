@@ -30,12 +30,12 @@
 #define GENERIC_TORQUER_SEND_DEV_DATA_CC       8
 
 /* Added stuff from previous torquers */
-#define TRQ_ENABLE_CC               9
-#define TRQ_DISABLE_CC              10
-#define TRQ_DIRECTION_CC            11
-#define TRQ_TIME_HIGH_CC            12
-#define TRQ_PERCENT_ON_CC           13
-#define TRQ_3AXIS_PCT_ON_CC         14
+#define GENERIC_TORQUER_ENABLE_CC              9
+#define GENERIC_TORQUER_DISABLE_CC             10
+#define GENERIC_TORQUER_DIRECTION_CC           11
+#define GENERIC_TORQUER_TIME_HIGH_CC           12
+#define GENERIC_TORQUER_PERCENT_ON_CC          13
+#define GENERIC_TORQUER_3AXIS_PCT_ON_CC        14
 
 /*************************************************************************/
 
