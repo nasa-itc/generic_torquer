@@ -337,20 +337,18 @@ static int32 GENERIC_TORQUER_AppInit(void)
         CFE_ES_WriteToSysLog("TRQ: error sending initialization event: 0x%08X\n", (unsigned int) status);
     }
 
-
-
     return (CFE_SUCCESS);
 
 } /* End of GENERIC_TORQUER_AppInit() */
 
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*  Name:  GENERIC_TORQUER_ProcessCommandPacket                                        */
-/*                                                                            */
-/*  Purpose:                                                                  */
+/*                                                                                     */
+/*  Purpose:                                                                           */
 /*     This routine will process any packet that is received on the GENERIC_TORQUER    */
-/*     command pipe.                                                          */
-/*                                                                            */
-/* * * * * * * * * * * * * * * * * * * * * * * *  * * * * * * *  * *  * * * * */
+/*     command pipe.                                                                   */
+/*                                                                                     */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 static void GENERIC_TORQUER_ProcessCommandPacket(CFE_SB_MsgPtr_t Msg)
 {
     CFE_SB_MsgId_t MsgId;
