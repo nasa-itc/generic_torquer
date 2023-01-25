@@ -40,7 +40,7 @@ static bool GENERIC_TORQUER_VerifyCmdLength(CFE_SB_MsgPtr_t Msg, uint16 Expected
 /*
 ** Global Data
 */
-TRQ_AppData_t TRQ_AppData;
+GENERIC_TORQUER_AppData_t GENERIC_TORQUER_AppData;
 
 static CFE_EVS_BinFilter_t  TRQ_EventFilters[] =
 {   /* Event ID    mask */
@@ -366,6 +366,7 @@ static void GENERIC_TORQUER_ProcessCommandPacket(CFE_SB_MsgPtr_t Msg)
             break;
 
         default:
+            GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandErrorCount++;
             CFE_EVS_SendEvent(GENERIC_TORQUER_INVALID_MSGID_ERR_EID, CFE_EVS_EventType_ERROR,
                               "GENERIC_TORQUER: invalid command packet,MID = 0x%x", (unsigned int)CFE_SB_MsgIdToValue(MsgId));
             break;
@@ -377,14 +378,21 @@ static void GENERIC_TORQUER_ProcessCommandPacket(CFE_SB_MsgPtr_t Msg)
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /*                                                                            */
-/* Name:  GENERIC_TORQUER_ProcessGroundCommand()                                       */
+/* Name:  GENERIC_TORQUER_ProcessGroundCommand()                              */
 /*                                                                            */
 /* Purpose:                                                                   */
-/*        GENERIC_TORQUER ground commands                                              */
+/*        GENERIC_TORQUER ground commands                                     */
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 static void GENERIC_TORQUER_ProcessGroundCommand(CFE_SB_MsgPtr_t Msg)
 {
+
+    int32 status = OS_SUCCESS;
+    /*
+    ** MsgId is only needed if the command code is not recognized. See default case.
+    */
+    CFE_SB_MsgId_t MsgId = CFE_SB_GetMsgId(TRQ_AppData.MsgPtr);   
+
     uint16 CommandCode = CFE_SB_GetCmdCode(Msg);
     GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandCounter++;
 
@@ -412,6 +420,77 @@ static void GENERIC_TORQUER_ProcessGroundCommand(CFE_SB_MsgPtr_t Msg)
             }
 
             break;
+
+/* Added stuff */
+
+        /*
+        ** Enable Command
+        */
+        case GENERIC_TORQUER_ENABLE_CC:
+            if (GENERIC_TORQUER_VerifyCmdLength(GENERIC_TORQUER_AppData.MsgPtr, GENERIC_TORQUER_ENABLE_DISABLE_CMD_LEN) == OS_SUCCESS)
+            {
+                CFE_EVS_SendEvent(GENERIC_TORQUER_COMMANDENABLE_INF_EID, CFE_EVS_INFORMATION, "TRQ: Device enable command received");
+                GENERIC_TORQUER_Enable_Disable(GENERIC_TORQUER_AppData.MsgPtr);
+            }   
+            break;
+
+        /*
+        ** Disable Command
+        */
+        case GENERIC_TORQUER_DISABLE_CC:
+            if (GENERIC_TORQUER_VerifyCmdLength(GENERIC_TORQUER_AppData.MsgPtr, GENERIC_TORQUER_ENABLE_DISABLE_CMD_LEN) == OS_SUCCESS)
+            {
+                CFE_EVS_SendEvent(GENERIC_TORQUER_COMMANDDISABLE_INF_EID, CFE_EVS_INFORMATION, "TRQ: Device disable command received");
+                GENERIC_TORQUER_Enable_Disable(GENERIC_TORQUER_AppData.MsgPtr);
+            }   
+            break;
+
+        /*
+        ** Direction Command
+        */
+        case GENERIC_TORQUER_DIRECTION_CC:
+            if (GENERIC_TORQUER_VerifyCmdLength(GENERIC_TORQUER_AppData.MsgPtr, GENERIC_TORQUER_DIRECTION_CMD_LEN) == OS_SUCCESS)
+            {
+                CFE_EVS_SendEvent(GENERIC_TORQUER_COMMANDDIRECTION_INF_EID, CFE_EVS_DEBUG, "TRQ: Direction command received");
+                GENERIC_TORQUER_Enable_Disable(TRQ_AppData.MsgPtr);
+            }   
+            break;
+
+        /*
+        ** Time High Command
+        */ 
+        case GENERIC_TORQUER_TIME_HIGH_CC:
+            if (GENERIC_TORQUER_VerifyCmdLength(GENERIC_TORQUER_AppData.MsgPtr, GENERIC_TORQUER_TIME_HIGH_CMD_LEN) == OS_SUCCESS)
+            {
+                CFE_EVS_SendEvent(GENERIC_TORQUER_COMMANDHIGH_INF_EID, CFE_EVS_DEBUG, "TRQ: Time high command received");
+                GENERIC_TORQUER_Time_High(GENERIC_TORQUER_AppData.MsgPtr);
+            }   
+            break;
+
+        /*
+        ** Percent On Command
+        */
+        case GENERIC_TORQUER_PERCENT_ON_CC:
+            if (GENERIC_TORQUER_VerifyCmdLength(GENERIC_TORQUER_AppData.MsgPtr, GENERIC_TORQUER_PERCENT_ON_CMD_LEN) == OS_SUCCESS)
+            {
+                CFE_EVS_SendEvent(GENERIC_TORQUER_COMMANDPERCENT_INF_EID, CFE_EVS_DEBUG, "TRQ: Percent on command received");
+                GENERIC_TORQUER_Percent_On(GENERIC_TORQUER_AppData.MsgPtr);
+            }   
+            break;
+
+        /*
+        ** 3 Axis Percent On Command
+        */
+        case GENERIC_TORQUER_3AXIS_PCT_ON_CC:
+            if (GENERIC_TORQUER_VerifyCmdLength(GENERIC_TORQUER_AppData.MsgPtr, GENERIC_TORQUER_3AXIS_PCT_ON_CMD_LEN) == OS_SUCCESS)
+            {
+                CFE_EVS_SendEvent(GENERIC_TORQUER_COMMAND_3AXIS_PCT_INF_EID, CFE_EVS_DEBUG, "TRQ: 3 Axis Percent on command received");
+                GENERIC_TORQUER_3Axis_Pct_On(GENERIC_TORQUER_AppData.MsgPtr);
+            }   
+            break;
+
+
+
 
         /*
         ** TODO: Edit and add more command codes as appropriate for the application
