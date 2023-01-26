@@ -61,6 +61,7 @@ typedef struct
     uint32 RunStatus;                   /* App run status for controlling the application state */
     uint32 MagTrqMutex;                 /* Mutex between trq and mag */
 
+    GENERIC_TORQUER_Info_t TrqInfo[3];
 
     /*
     ** Initialization data (not reported in housekeeping)...

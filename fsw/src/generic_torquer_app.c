@@ -313,7 +313,7 @@ static int32 GENERIC_TORQUER_AppInit(void)
     /* 
     ** Always reset all counters during application initialization 
     */
-    GENERIC_TORQUER_ResetCounters();
+    GENERIC_TORQUER_ResetCounters((GENERIC_TORQUER_ResetCounters_t *)Msg);
 
     /* END ADDED SECTION */
 
@@ -648,7 +648,7 @@ void GENERIC_TORQUER_Enable_Disable(CFE_SB_MsgPtr_t msg)
     {
         /* Set TRQ to zero before enabling */
         trq_command(&GENERIC_TORQUER_AppData.trqDevice[enable_cmd->TrqNum], GENERIC_TORQUER_OFF_ADJUSTMENT, 
-			GENERIC_TORQUER_AppData.HkBuf.HkTlm.TrqInfo[enable_cmd->TrqNum].Direction);
+			GENERIC_TORQUER_AppData.TrqInfo[enable_cmd->TrqNum].Direction);
         value = TRQ_ENABLED;
     }
     else
@@ -662,7 +662,7 @@ void GENERIC_TORQUER_Enable_Disable(CFE_SB_MsgPtr_t msg)
     /* Verify success */
     if (status == GPIO_SUCCESS)
     {
-        GENERIC_TORQUER_AppData.HkBuf.HkTlm.TrqInfo[enable_cmd->TrqNum].Enabled = value;
+        GENERIC_TORQUER_AppData.TrqInfo[enable_cmd->TrqNum].Enabled = value;
         GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandCounter++;
     }
     else
@@ -710,7 +710,7 @@ void TRQ_Direction(CFE_SB_MsgPtr_t msg)
     /* Verify success */
     if (status == TRQ_SUCCESS)
     {
-        GENERIC_TORQUER_AppData.HkBuf.HkTlm.TrqInfo[direction_cmd->TrqNum].Direction = direction_cmd->Direction;
+        GENERIC_TORQUER_AppData.TrqInfo[direction_cmd->TrqNum].Direction = direction_cmd->Direction;
         GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandCounter++;
     }
     else
@@ -758,7 +758,7 @@ void GENERIC_TORQUER_Time_High(CFE_SB_MsgPtr_t msg)
     /* Verify success */
     if (status == TRQ_SUCCESS)
     {
-        GENERIC_TORQUER_AppData.HkBuf.HkTlm.TrqInfo[time_high_cmd->TrqNum].TimeHigh = time_high_cmd->TimeHigh;
+        GENERIC_TORQUER_AppData.TrqInfo[time_high_cmd->TrqNum].TimeHigh = time_high_cmd->TimeHigh;
         GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandCounter++;
     }
     else
@@ -792,7 +792,7 @@ void GENERIC_TORQUER_Percent_On(CFE_SB_MsgPtr_t msg)
     }
 
     /* Check enabled */
-    if (GENERIC_TORQUER_AppData.HkBuf.HkTlm.TrqInfo[percent_on_cmd->TrqNum].Enabled != TRQ_ENABLED)
+    if (GENERIC_TORQUER_AppData.TrqInfo[percent_on_cmd->TrqNum].Enabled != TRQ_ENABLED)
     {
         CFE_EVS_SendEvent(GENERIC_TORQUER_COMMANDENABLED_ERR_EID, CFE_EVS_ERROR, 
                 "TRQ: Torquer %d not enabled ", percent_on_cmd->TrqNum);
@@ -838,9 +838,9 @@ void GENERIC_TORQUER_Percent_On(CFE_SB_MsgPtr_t msg)
     /* Verify success */
     if (status == TRQ_SUCCESS)
     {
-        GENERIC_TORQUER_AppData.HkBuf.HkTlm.TrqInfo[percent_on_cmd->TrqNum].Direction = 
+        GENERIC_TORQUER_AppData.TrqInfo[percent_on_cmd->TrqNum].Direction = 
 			GENERIC_TORQUER_AppData.trqDevice[percent_on_cmd->TrqNum].positive_direction;
-        GENERIC_TORQUER_AppData.HkBuf.HkTlm.TrqInfo[percent_on_cmd->TrqNum].TimeHigh = 
+        GENERIC_TORQUER_AppData.TrqInfo[percent_on_cmd->TrqNum].TimeHigh = 
 			GENERIC_TORQUER_AppData.trqDevice[percent_on_cmd->TrqNum].timer_high_ns;
         GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandCounter++;
     }
