@@ -19,6 +19,7 @@
 #include "generic_torquer_app_perfids.h"
 #include "generic_torquer_app_msgids.h"
 
+#include "cfe.h"
 #include "cfe_sb.h"
 #include "cfe_evs.h"
 #include "hwlib.h"
