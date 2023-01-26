@@ -94,7 +94,7 @@ typedef struct
     uint8   TrqNum;
 
 } OS_PACK GENERIC_TORQUER_Enable_Disable_Cmd_t;
-#define TRQ_ENABLE_DISABLE_CMD_LEN sizeof(TRQ_Enable_Disable_Cmd_t)
+#define GENERIC_TORQUER_ENABLE_DISABLE_CMD_LEN sizeof(GENERIC_TORQUER_Enable_Disable_Cmd_t)
 
 /*
 ** Direction command
@@ -106,7 +106,7 @@ typedef struct
     uint8   Direction;
 
 } OS_PACK GENERIC_TORQUER_Direction_Cmd_t;
-#define TRQ_DIRECTION_CMD_LEN sizeof(TRQ_Direction_Cmd_t)
+#define GENERIC_TORQUER_DIRECTION_CMD_LEN sizeof(GENERIC_TORQUER_Direction_Cmd_t)
 
 /*
 ** Time high command
@@ -118,7 +118,7 @@ typedef struct
     uint32  TimeHigh;
 
 } OS_PACK GENERIC_TORQUER_Time_High_Cmd_t;
-#define TRQ_TIME_HIGH_CMD_LEN sizeof(TRQ_Time_High_Cmd_t)
+#define GENERIC_TORQUER_TIME_HIGH_CMD_LEN sizeof(GENERIC_TORQUER_Time_High_Cmd_t)
 
 /*
 ** Percent on command
@@ -131,7 +131,7 @@ typedef struct
     uint8   PercentOn;
 
 } OS_PACK GENERIC_TORQUER_Percent_On_Cmd_t;
-#define TRQ_PERCENT_ON_CMD_LEN sizeof(TRQ_Percent_On_Cmd_t)
+#define GENERIC_TORQUER_PERCENT_ON_CMD_LEN sizeof(GENERIC_TORQUER_Percent_On_Cmd_t)
 
 /*
 ** 3 Axis Percent on command
@@ -143,7 +143,7 @@ typedef struct
     GENERIC_TORQUER_Percent_On_Cmd_t    TrqPctOnCmd[3];
 
 } OS_PACK GENERIC_TORQUER_3Axis_Pct_On_Cmd_t;
-#define TRQ_3AXIS_PCT_ON_CMD_LEN sizeof(TRQ_3Axis_Pct_On_Cmd_t)
+#define GENERIC_TORQUER_3AXIS_PCT_ON_CMD_LEN sizeof(GENERIC_TORQUER_3Axis_Pct_On_Cmd_t)
 
 /*
 ** GENERIC_TORQUER info struct
@@ -155,7 +155,7 @@ typedef struct
     uint32  TimeHigh;
 
 } OS_PACK GENERIC_TORQUER_Info_t;
-#define TRQ_INFO_LEN sizeof(TRQ_Info_t)
+#define GENERIC_TORQUER_INFO_LEN sizeof(GENERIC_TORQUER_Info_t)
 
 
 /*************************************************************************/
