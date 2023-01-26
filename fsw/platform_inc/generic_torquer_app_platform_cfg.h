@@ -32,6 +32,14 @@
     #define GENERIC_TORQUER_CFG_HANDLE           29 
     #define GENERIC_TORQUER_CFG_BAUDRATE_HZ      115200
     #define GENERIC_TORQUER_CFG_MS_TIMEOUT       250
+
+    #define TRQ_PERIOD               50000000
+    #define TRQ_MIN_PERCENT          0
+    #define TRQ_MAX_PERCENT          100
+    #define TRQ1_ENABLE              15
+    #define TRQ2_ENABLE              16
+    #define TRQ3_ENABLE              17
+
 #endif
 
 #endif /* _GENERIC_TORQUER_PLATFORM_CFG_H_ */

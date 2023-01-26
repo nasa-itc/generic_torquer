@@ -647,7 +647,7 @@ void GENERIC_TORQUER_Enable_Disable(CFE_SB_MsgPtr_t msg)
     if (CommandCode == GENERIC_TORQUER_ENABLE_CC)
     {
         /* Set TRQ to zero before enabling */
-        trq_command(&GENERIC_TORQUER_AppData.trqDevice[enable_cmd->TrqNum], GENERIC_TORQUER_OFF_ADJUSTMENT, 
+        trq_command(&GENERIC_TORQUER_AppData.trqDevice[enable_cmd->TrqNum], 0, 
 			GENERIC_TORQUER_AppData.TrqInfo[enable_cmd->TrqNum].Direction);
         value = TRQ_ENABLED;
     }
@@ -823,14 +823,14 @@ void GENERIC_TORQUER_Percent_On(CFE_SB_MsgPtr_t msg)
     {
         percent_on_cmd->PercentOn = TRQ_MAX_PERCENT;
     }
-    else if (percent_on_cmd->PercentOn == 0)
+    else if (percent_on_cmd->PercentOn <= 0)
     {
-        percent_on_cmd->PercentOn = TRQ_OFF_ADJUSTMENT;
+        percent_on_cmd->PercentOn = 0;
     }
-    else if (percent_on_cmd->PercentOn < TRQ_MIN_PERCENT)
-    {
-        percent_on_cmd->PercentOn = TRQ_MIN_PERCENT;
-    }
+//    else if (percent_on_cmd->PercentOn < TRQ_MIN_PERCENT)
+//    {
+//        percent_on_cmd->PercentOn = TRQ_MIN_PERCENT;
+//    }
     
     /* Set Percent On */
     status = trq_command(&GENERIC_TORQUER_AppData.trqDevice[percent_on_cmd->TrqNum], percent_on_cmd->PercentOn, percent_on_cmd->Direction);
