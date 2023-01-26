@@ -18,7 +18,7 @@
 #include "generic_torquer_app_version.h"
 #include "generic_torquer_app_msgids.h"
 #include "generic_torquer_app_perfids.h"
-#include "generic_torquer_device.h"
+//#include "generic_torquer_device.h"
 
 #include "cfe_error.h"
 
@@ -28,7 +28,7 @@ static int32 GENERIC_TORQUER_AppInit(void);
 static void  GENERIC_TORQUER_ProcessCommandPacket(CFE_SB_MsgPtr_t Msg);
 static void  GENERIC_TORQUER_ProcessGroundCommand(CFE_SB_MsgPtr_t Msg);
 static int32 GENERIC_TORQUER_ReportHousekeeping(const CFE_SB_CmdHdr_t *Msg);
-static int32 GENERIC_TORQUER_ResetCounters(const GENERIC_TORQUER_ResetCounters_t *Msg);
+static int32 GENERIC_TORQUER_ResetCounters(void);
 static int32 GENERIC_TORQUER_Noop(const GENERIC_TORQUER_Noop_t *Msg);
 
 static bool GENERIC_TORQUER_VerifyCmdLength(CFE_SB_MsgPtr_t Msg, uint16 ExpectedLength);
@@ -303,7 +303,7 @@ static int32 GENERIC_TORQUER_AppInit(void)
     /* 
     ** Always reset all counters during application initialization 
     */
-    GENERIC_TORQUER_ResetCounters((GENERIC_TORQUER_ResetCounters_t *)Msg);
+    GENERIC_TORQUER_ResetCounters(); //(GENERIC_TORQUER_ResetCounters_t *)Msg);
 
     /* END ADDED SECTION */
 
@@ -400,7 +400,7 @@ static void GENERIC_TORQUER_ProcessGroundCommand(CFE_SB_MsgPtr_t Msg)
         case GENERIC_TORQUER_APP_RESET_COUNTERS_CC:
             if (GENERIC_TORQUER_VerifyCmdLength(Msg, sizeof(GENERIC_TORQUER_ResetCounters_t)))
             {
-                GENERIC_TORQUER_ResetCounters((GENERIC_TORQUER_ResetCounters_t *)Msg);
+                GENERIC_TORQUER_ResetCounters();
             } else {
                 GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
             }
@@ -596,7 +596,7 @@ static int32 GENERIC_TORQUER_Noop(const GENERIC_TORQUER_Noop_t *Msg)
 /*         part of the task telemetry.                                        */
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * *  * * * * * * *  * *  * * * * */
-static int32 GENERIC_TORQUER_ResetCounters(const GENERIC_TORQUER_ResetCounters_t *Msg)
+static int32 GENERIC_TORQUER_ResetCounters(void)//const GENERIC_TORQUER_ResetCounters_t *Msg)
 {
 
     GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandCounter = 0;
