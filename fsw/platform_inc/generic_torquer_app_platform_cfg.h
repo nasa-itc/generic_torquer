@@ -36,9 +36,9 @@
     #define TRQ_PERIOD               50000000
     #define TRQ_MIN_PERCENT          0
     #define TRQ_MAX_PERCENT          100
-    #define TRQ1_ENABLE              15
-    #define TRQ2_ENABLE              16
-    #define TRQ3_ENABLE              17
+    #define TRQ1_GPIO                15
+    #define TRQ2_GPIO                16
+    #define TRQ3_GPIO                17
 
 #endif
 

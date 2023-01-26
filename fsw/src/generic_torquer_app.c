@@ -277,11 +277,11 @@ static int32 GENERIC_TORQUER_AppInit(void)
     /*
     ** Initialize GPIO interfaces
     */ 
-    GENERIC_TORQUER_AppData.trqEnable[0].pin = TRQ1_ENABLE;
+    GENERIC_TORQUER_AppData.trqEnable[0].pin = TRQ1_GPIO;
     GENERIC_TORQUER_AppData.trqEnable[0].direction = GPIO_OUTPUT;
-    GENERIC_TORQUER_AppData.trqEnable[1].pin = TRQ2_ENABLE;
+    GENERIC_TORQUER_AppData.trqEnable[1].pin = TRQ2_GPIO;
     GENERIC_TORQUER_AppData.trqEnable[1].direction = GPIO_OUTPUT;
-    GENERIC_TORQUER_AppData.trqEnable[2].pin = TRQ3_ENABLE;
+    GENERIC_TORQUER_AppData.trqEnable[2].pin = TRQ3_GPIO;
     GENERIC_TORQUER_AppData.trqEnable[2].direction = GPIO_OUTPUT;
     for(i = 0; i < 3; i++)
     {
@@ -298,16 +298,6 @@ static int32 GENERIC_TORQUER_AppInit(void)
             CFE_EVS_SendEvent(GENERIC_TORQUER_INIT_GPIO_ERR_EID, CFE_EVS_ERROR, "GENERIC_TORQUER: device %d set disabled error %d", i, status);
             return -1; 
         }
-    }
-
-    /*
-    ** Create Mutex for Magnetometer and Torquer
-    */
-    status = OS_MutSemCreate(&GENERIC_TORQUER_AppData.MagTrqMutex, ADCS_MAG_TRQ_MUTEX, 0);
-    if(status != OS_SUCCESS)
-    {
-        CFE_EVS_SendEvent(GENERIC_TORQUER_INIT_MUTEX_ERR_EID, CFE_EVS_ERROR, "GENERIC_TORQUER: Error creating Mag Trq Mutex %d", i, status);
-        return status;
     }
 
     /* 
@@ -880,9 +870,6 @@ void GENERIC_TORQUER_3Axis_Pct_On(CFE_SB_MsgPtr_t msg)
             percent_on_cmd = (CFE_SB_MsgPtr_t) &Trq_3Axis_Cmd->TrqPctOnCmd[i];
             GENERIC_TORQUER_Percent_On(percent_on_cmd);
         }
-
-        // Sleep for CFG time to let TRQ run without mag on
-        OS_TaskDelay(ADCS_CFG_TRQ_FIRE_MS);
 
         // Command each axis off
         for(i = 0; i < 3; i++)
