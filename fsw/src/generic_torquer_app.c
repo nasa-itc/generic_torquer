@@ -18,7 +18,7 @@
 #include "generic_torquer_app_version.h"
 #include "generic_torquer_app_msgids.h"
 #include "generic_torquer_app_perfids.h"
-#include "generic_torquer_device.h"
+//#include "generic_torquer_device.h"
 
 #include "cfe_error.h"
 
@@ -91,19 +91,19 @@ void GENERIC_TORQUER_AppMain(void)
 
     /*
     ** Perform application specific initialization
-    ** If the Initialization fails, set the RunStatus to
+    ** If the Initialization fails, set the GENERIC_TORQUER_AppData.RunStatus to
     ** CFE_ES_RunStatus_APP_ERROR and the App will not enter the RunLoop
     */
     status = GENERIC_TORQUER_AppInit();
     if (status != CFE_SUCCESS)
     {
-        RunStatus = CFE_ES_RunStatus_APP_ERROR;
+        GENERIC_TORQUER_AppData.RunStatus = CFE_ES_RunStatus_APP_ERROR;
     }
 
     /*
     ** GENERIC_TORQUER Runloop
     */
-    while (CFE_ES_RunLoop(&RunStatus) == true)
+    while (CFE_ES_RunLoop(&GENERIC_TORQUER_AppData.RunStatus) == true)
     {
         /*
         ** Performance Log Exit Stamp
@@ -127,17 +127,17 @@ void GENERIC_TORQUER_AppMain(void)
             CFE_EVS_SendEvent(GENERIC_TORQUER_PIPE_ERR_EID, CFE_EVS_EventType_ERROR,
                               "GENERIC_TORQUER APP: SB Pipe Read Error, App Will Exit");
 
-            RunStatus = CFE_ES_RunStatus_APP_ERROR;
+            GENERIC_TORQUER_AppData.RunStatus = CFE_ES_RunStatus_APP_ERROR;
         }
     }
 
-    RunStatus = CFE_ES_RunStatus_APP_EXIT; // we are wanting to exit... make sure everyone knows it
+    GENERIC_TORQUER_AppData.RunStatus = CFE_ES_RunStatus_APP_EXIT; // we are wanting to exit... make sure everyone knows it
 
-    status = GENERIC_TORQUER_DeviceShutdown();
-    if (status != CFE_SUCCESS)
-    {
-        CFE_ES_WriteToSysLog("Generic_torquer App: Error Shutting Down Device, RC = 0x%08lX\n", (unsigned long)status);
-    }
+//    status = GENERIC_TORQUER_DeviceShutdown();
+//    if (status != CFE_SUCCESS)
+//    {
+//        CFE_ES_WriteToSysLog("Generic_torquer App: Error Shutting Down Device, RC = 0x%08lX\n", (unsigned long)status);
+//    }
 
     /*
     ** Close Devices
@@ -153,7 +153,7 @@ void GENERIC_TORQUER_AppMain(void)
     */
     CFE_ES_PerfLogExit(GENERIC_TORQUER_APP_PERF_ID);
 
-    CFE_ES_ExitApp(RunStatus);
+    CFE_ES_ExitApp(GENERIC_TORQUER_AppData.RunStatus);
 
 } /* End of GENERIC_TORQUER_AppMain() */
 
@@ -170,7 +170,7 @@ static int32 GENERIC_TORQUER_AppInit(void)
     int32 status = OS_SUCCESS;
     uint8_t i;
 
-    RunStatus = CFE_ES_RunStatus_APP_RUN;
+    GENERIC_TORQUER_AppData.RunStatus = CFE_ES_RunStatus_APP_RUN;
 
     /*
     ** Initialize app command execution counters
@@ -247,13 +247,13 @@ static int32 GENERIC_TORQUER_AppInit(void)
         return (status);
     }
 
-    status = GENERIC_TORQUER_DeviceInit();
-    if (status != CFE_SUCCESS)
-    {
-        CFE_ES_WriteToSysLog("Generic_torquer App: Error Initializing Device, RC = 0x%08lX\n", (unsigned long)status);
-
-        return (status);
-    }
+//    status = GENERIC_TORQUER_DeviceInit();
+//    if (status != CFE_SUCCESS)
+//    {
+//        CFE_ES_WriteToSysLog("Generic_torquer App: Error Initializing Device, RC = 0x%08lX\n", (unsigned long)status);
+//
+//        return (status);
+//    }
 
     
     /* ADDED SECTION */
@@ -482,6 +482,7 @@ static void GENERIC_TORQUER_ProcessGroundCommand(CFE_SB_MsgPtr_t Msg)
         /*
         ** TODO: Edit and add more command codes as appropriate for the application
         */
+/*
         case GENERIC_TORQUER_APP_RESET_DEV_CNTRS_CC:
             GENERIC_TORQUER_DeviceResetCounters();
             break;
@@ -536,6 +537,7 @@ static void GENERIC_TORQUER_ProcessGroundCommand(CFE_SB_MsgPtr_t Msg)
                 GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
             }
             break;
+*/
 
         /* default case already found during FC vs length test */
         default:
