@@ -17,6 +17,16 @@ namespace Nos3
         // Accessors
         boost::shared_ptr<SimIDataPoint> get_data_point(void) const;
 
+        /// @name Non-mutating public worker methods
+        //@{
+        /** \brief Method to command the MTB.
+         *
+         * @param trq_num    Torquer number to command
+         * @param trq_value  (Signed) Value to apply to the MTB in A-m^2
+         */
+        void cmd_torque(int trq_num, double trq_value);
+        //@}
+
     private:
         // Disallow these
         ~Generic_torquer42DataProvider(void) {};

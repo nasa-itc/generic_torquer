@@ -1,4 +1,19 @@
 #include <generic_torquer_hardware_model.hpp>
+#include <generic_torquer_42_data_provider.hpp>
+
+#include <ItcLogger/Logger.hpp>
+
+#include <boost/property_tree/xml_parser.hpp>
+#include <boost/foreach.hpp>
+#include <sstream>
+#include <sys/socket.h>
+#include <arpa/inet.h>	
+#include <fcntl.h>
+#include "libgpio.c"
+
+#define GPIO_IN              0
+#define GPIO_OUT             1
+
 
 namespace Nos3
 {
@@ -6,10 +21,16 @@ namespace Nos3
 
     extern ItcLogger::Logger *sim_logger;
 
+    gpio_info_t             _sleep_pin;
+    gpio_info_t             _reset_pin[3];
+    gpio_info_t             _fault_pin[3];
+
     const std::string Generic_torquerHardwareModel::_generic_torquer_stream_name = "generic_torquer_stream";
 
     Generic_torquerHardwareModel::Generic_torquerHardwareModel(const boost::property_tree::ptree& config) : SimIHardwareModel(config), _stream_counter(0)
     {
+        sim_logger->debug("MTBHardwareModel::MTBHardwareModel:  Constructor executing");
+
         std::string connection_string = config.get("common.nos-connection-string", "tcp://127.0.0.1:12001"); // Get the NOS engine connection string, needed for the busses
         sim_logger->info("Generic_torquerHardwareModel::Generic_torquerHardwareModel:  NOS Engine connection string: %s.", connection_string.c_str());
 
@@ -89,6 +110,9 @@ namespace Nos3
         _time_bus->add_time_tick_callback(std::bind(&Generic_torquerHardwareModel::send_streaming_data, this, std::placeholders::_1));
         sim_logger->info("Generic_torquerHardwareModel::Generic_torquerHardwareModel:  Now on time bus %s, executing callback to stream data.", time_bus_name.c_str());
         /* ^^^ 3. Streaming data */
+
+
+
     }
 
     // vvv Pretty standard... only change me if a different bus type is used and/or the data provider is not needed

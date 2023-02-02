@@ -13,6 +13,12 @@
 #include <generic_torquer_data_point.hpp>
 #include <sim_i_hardware_model.hpp>
 
+#include <atomic>
+#include <sys/socket.h>
+#include <arpa/inet.h>	
+#include <fcntl.h>
+#include "libgpio.h"
+
 namespace Nos3
 {
     // vvv This is pretty standard for a hardware model
@@ -25,6 +31,7 @@ namespace Nos3
 
     private:
         // Private helper methods
+	void run(void);
         void uart_read_callback(const uint8_t *buf, size_t len); // This guy handles unsolicited bytes the hardware receives from its peripheral bus
         void send_streaming_data(NosEngine::Common::SimTime time); // This guy provides an example of how to send unsolicited streaming data
         void create_generic_torquer_data(const Generic_torquerDataPoint& data_point, std::vector<uint8_t>& out_data); // This guy creates data to send from a data point
@@ -33,6 +40,16 @@ namespace Nos3
         // Private data members
         std::unique_ptr<NosEngine::Uart::Uart>              _uart_connection; // Change me if your peripheral bus is different (e.g. SPI, I2C, etc.)
         std::unique_ptr<NosEngine::Client::Bus>             _time_bus; // Very standard
+
+        std::atomic<bool> 				    _keep_running;
+        int                                                 _num_mtbs;
+        std::vector<double>                                 _max_trq;
+        std::vector<double>                                 _trq_last_value;
+        int                                                 sockfd;
+        int                                                 port_num;
+        char*                                               ip_address;
+        sa_family_t                                         address_family;
+        int                                                 socket_flags;
 
         SimIDataProvider*                                   _generic_torquer_dp; // I'm only needed if the sim actually has/needs a data provider
 

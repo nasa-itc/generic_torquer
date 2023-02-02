@@ -10,6 +10,10 @@ namespace Nos3
 
     extern ItcLogger::Logger *sim_logger;
 
+    /*************************************************************************
+     * Constructors
+     *************************************************************************/
+
     Generic_torquer42DataProvider::Generic_torquer42DataProvider(const boost::property_tree::ptree& config) : SimData42SocketProvider(config)
     {
         sim_logger->trace("Generic_torquer42DataProvider::Generic_torquer42DataProvider:  Constructor executed");
@@ -19,6 +23,18 @@ namespace Nos3
             config.get("simulator.hardware-model.data-provider.port", 4242) );
 
         _sc = config.get("simulator.hardware-model.data-provider.spacecraft", 0);
+    }
+
+    /*************************************************************************
+     * Non-mutating public worker methods
+     *************************************************************************/
+
+    void MTBSimData42SocketProvider::cmd_torque(int trq_num, double trq_value)
+    {
+        char buffer [56];
+        sprintf (buffer, "SC[%i].AC.MTB[%i].Mcmd = %lf\n[EOF]\n", _sc, trq_num, trq_value);
+
+        send_command_to_socket(std::string(buffer));
     }
 
     boost::shared_ptr<SimIDataPoint> Generic_torquer42DataProvider::get_data_point(void) const
