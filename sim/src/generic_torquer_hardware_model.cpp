@@ -9,7 +9,6 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>	
 #include <fcntl.h>
-#include "libgpio.c"
 
 #define GPIO_IN              0
 #define GPIO_OUT             1
@@ -21,15 +20,11 @@ namespace Nos3
 
     extern ItcLogger::Logger *sim_logger;
 
-    gpio_info_t             _sleep_pin;
-    gpio_info_t             _reset_pin[3];
-    gpio_info_t             _fault_pin[3];
-
     const std::string Generic_torquerHardwareModel::_generic_torquer_stream_name = "generic_torquer_stream";
 
     Generic_torquerHardwareModel::Generic_torquerHardwareModel(const boost::property_tree::ptree& config) : SimIHardwareModel(config), _stream_counter(0)
     {
-        sim_logger->debug("MTBHardwareModel::MTBHardwareModel:  Constructor executing");
+        sim_logger->debug("GenericTorquerHardwareModel::GenericTorquerHardwareModel:  Constructor executing");
 
         std::string connection_string = config.get("common.nos-connection-string", "tcp://127.0.0.1:12001"); // Get the NOS engine connection string, needed for the busses
         sim_logger->info("Generic_torquerHardwareModel::Generic_torquerHardwareModel:  NOS Engine connection string: %s.", connection_string.c_str());
@@ -68,6 +63,49 @@ namespace Nos3
         /* !!! If your sim does not *stream* data, delete this entire block. */
         /* vvv !!! Add streaming data functions !!! USER TIP:  Add names and functions to stream data based on what your hardware can stream here */
         _streaming_data_function_map.insert(std::map<std::string, streaming_data_func>::value_type(_generic_torquer_stream_name, &Generic_torquerHardwareModel::create_generic_torquer_data));
+
+        _num_generic_torquer = config.get("simulator.hardware-model.params.num-generic_torquer", 3);
+        _max_trq.resize(_num_generic_torquer);
+        std::stringstream max_trq;
+        for (int i=0; i < _num_generic_torquer; i++) {
+            // get GenericTorquer max torques
+            max_trq << "simulator.hardware-model.params.max-trq-generic_torquer-" << i;
+            _max_trq[i] = config.get(max_trq.str(), 0.15);
+            max_trq.str(std::string());
+        }
+        _trq_last_value.resize(_num_generic_torquer);
+
+        // Initialize socket information
+        sockfd = -1; 
+        port_num = 14242;
+        ip_address = NULL;
+        address_family = AF_INET;
+
+        // Create the socket
+        sockfd = socket(AF_INET, AF_INET, IPPROTO_UDP);
+        if (sockfd == -1) {
+            sim_logger->fatal("GenericTorquerHardwareModel::GenericTorquerHardwareModel:  Error creating Generic_torquer socket");
+            throw new std::runtime_error("GenericTorquerHardwareModel::GenericTorquerHardwareModel:  Error creating Generic_torquer socket");
+        }
+
+        // Bind server sockets to localhost and port number
+        // Prepare the sockaddr_in structure
+        struct sockaddr_in sockaddr;
+        sockaddr.sin_family = address_family;
+        sockaddr.sin_addr.s_addr = INADDR_ANY; //auto-fill with host ip
+        sockaddr.sin_port = htons(port_num);       
+
+        // Bind the socket 
+        int ret = bind(sockfd, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
+        if (ret != 0) {
+            sim_logger->fatal("GenericTorquerHardwareModel::GenericTorquerHardwareModel:  Error creating Generic Torquer socket");
+            throw new std::runtime_error("GenericTorquerHardwareModel::GenericTorquerHardwareModel:  Error creating Generic Torquer socket");
+        }  
+
+        // Set socket to non-blocking
+        socket_flags = fcntl(sockfd, F_GETFL, 0);
+        fcntl(sockfd, F_SETFL, socket_flags | O_NONBLOCK);
+
         /* ^^^ !!! Add streaming data functions !!! USER TIP:  Add names and functions to stream data based on what your hardware can stream here */
 
         /* Which streaming data functions are initially enabled should be set in the config file... which will be processed here. !!! DO NOT CHANGE BELOW.  */

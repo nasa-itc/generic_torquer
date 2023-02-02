@@ -17,7 +17,6 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>	
 #include <fcntl.h>
-#include "libgpio.h"
 
 namespace Nos3
 {
@@ -42,7 +41,7 @@ namespace Nos3
         std::unique_ptr<NosEngine::Client::Bus>             _time_bus; // Very standard
 
         std::atomic<bool> 				    _keep_running;
-        int                                                 _num_mtbs;
+        int                                                 _num_generic_torquer;
         std::vector<double>                                 _max_trq;
         std::vector<double>                                 _trq_last_value;
         int                                                 sockfd;

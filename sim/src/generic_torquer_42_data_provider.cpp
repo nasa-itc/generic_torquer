@@ -29,7 +29,7 @@ namespace Nos3
      * Non-mutating public worker methods
      *************************************************************************/
 
-    void MTBSimData42SocketProvider::cmd_torque(int trq_num, double trq_value)
+    void Generic_torquer42DataProvider::cmd_torque(int trq_num, double trq_value)
     {
         char buffer [56];
         sprintf (buffer, "SC[%i].AC.MTB[%i].Mcmd = %lf\n[EOF]\n", _sc, trq_num, trq_value);
