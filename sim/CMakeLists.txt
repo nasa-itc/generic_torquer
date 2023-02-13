@@ -29,7 +29,7 @@ add_library(generic_torquer_sim SHARED ${generic_torquer_sim_src} ${generic_torq
 target_link_libraries(generic_torquer_sim ${generic_torquer_sim_libs})
 install(TARGETS generic_torquer_sim LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
 
-add_executable(nos3-generic_torquer-simulator src/generic_torquer_sim.cpp)
-target_link_libraries(nos3-generic_torquer-simulator generic_torquer_sim ${generic_torquer_sim_libs})
-install(TARGETS nos3-generic_torquer-simulator RUNTIME DESTINATION bin)
+add_executable(nos3-generic-torquer-simulator src/generic_torquer_sim.cpp)
+target_link_libraries(nos3-generic-torquer-simulator generic_torquer_sim ${generic_torquer_sim_libs})
+install(TARGETS nos3-generic-torquer-simulator RUNTIME DESTINATION bin)
 install(TARGETS generic_torquer_sim LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
