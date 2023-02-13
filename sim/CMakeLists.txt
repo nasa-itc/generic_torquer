@@ -11,6 +11,7 @@ include_directories(inc
 set(generic_torquer_sim_src
     src/generic_torquer_hardware_model.cpp
     src/generic_torquer_42_data_provider.cpp
+    src/generic_torquer_data_provider.cpp
     src/generic_torquer_data_point.cpp
 )
 
