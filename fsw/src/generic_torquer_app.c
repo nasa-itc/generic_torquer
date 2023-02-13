@@ -219,7 +219,7 @@ static int32 GENERIC_TORQUER_AppInit(void)
     /*
     ** Create Software Bus message pipe.
     */
-    status = CFE_SB_CreatePipe(&GENERIC_TORQUER_AppData.CommandPipe, GENERIC_TORQUER_AppData.PipeDepth, "GENERIC_TORQUER_CMD_PIPE");
+    status = CFE_SB_CreatePipe(&GENERIC_TORQUER_AppData.CommandPipe, GENERIC_TORQUER_AppData.PipeDepth, "TRQ_CMD_PIPE");
     if (status != CFE_SUCCESS)
     {
         CFE_ES_WriteToSysLog("Generic_torquer App: Error creating pipe, RC = 0x%08lX\n", (unsigned long)status);
