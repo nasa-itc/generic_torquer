@@ -3,7 +3,6 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <ItcLogger/Logger.hpp>
-#include <generic_torquer_data_point.hpp>
 #include <sim_data_42socket_provider.hpp>
 
 namespace Nos3
@@ -15,8 +14,12 @@ namespace Nos3
         /* Constructors */
         Generic_torquer42DataProvider(const boost::property_tree::ptree& config);
 
-        /* Accessors */
-        boost::shared_ptr<SimIDataPoint> get_data_point(void) const;
+        /** \brief Method to command the torquer
+         *
+         * @param trq_num    Torquer number to command
+         * @param trq_value  (Signed) Value to apply to the MTB in A-m^2
+         */
+        void cmd_torque(int trq_num, double trq_value);
 
     private:
         /* Disallow these */
