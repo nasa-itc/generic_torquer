@@ -214,7 +214,7 @@ static int32 GENERIC_TORQUER_AppInit(void)
     /*
     ** Initialize housekeeping packet (clear user data area).
     */
-    CFE_SB_InitMsg(&GENERIC_TORQUER_AppData.HkBuf.MsgHdr, GENERIC_TORQUER_APP_HK_TLM_MID, sizeof(GENERIC_TORQUER_AppData.HkBuf), true);
+    CFE_SB_InitMsg(&GENERIC_TORQUER_AppData.HkBuf, GENERIC_TORQUER_APP_HK_TLM_MID, sizeof(GENERIC_TORQUER_AppData.HkBuf), true);
 
     /*
     ** Create Software Bus message pipe.
@@ -260,7 +260,7 @@ static int32 GENERIC_TORQUER_AppInit(void)
     /*
     ** Initialize GENERIC_TORQUER interfaces
     */ 
-    GENERIC_TORQUER_AppData.HkBuf.HkTlm.TrqPeriod = TRQ_PERIOD;
+//    GENERIC_TORQUER_AppData.HkBuf.HkTlm.TrqPeriod = TRQ_PERIOD;
     for(i = 0; i < 3; i++)
     {
         GENERIC_TORQUER_AppData.trqDevice[i].trq_num = i;

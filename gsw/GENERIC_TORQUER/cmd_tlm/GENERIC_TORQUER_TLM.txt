@@ -9,7 +9,7 @@ TELEMETRY GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T LITTLE_ENDIAN "GENERIC_TORQUE
   APPEND_ITEM    PAD                  16 UINT         "Because the packed struct it came from has a stride address of 32 and cFS does not serialize"
   
 TELEMETRY GENERIC_TORQUER GENERIC_TORQUER_DEV_HK_TLM_T LITTLE_ENDIAN "GENERIC_TORQUER_DeviceHkTlm_t"
-  APPEND_ID_ITEM CCSDS_STREAMID       16 UINT 0x08FB  "CCSDS Packet Identification" BIG_ENDIAN
+  APPEND_ID_ITEM CCSDS_STREAMID       16 UINT 0x093B  "CCSDS Packet Identification" BIG_ENDIAN
   APPEND_ITEM    CCSDS_SEQUENCE       16 UINT         "CCSDS Packet Sequence Control" BIG_ENDIAN
   APPEND_ITEM    CCSDS_LENGTH         16 UINT         "CCSDS Packet Data Length" BIG_ENDIAN
   APPEND_ITEM    CCSDS_SECONDS        32 UINT         "CCSDS Telemetry Secondary Header (seconds)"
@@ -27,7 +27,7 @@ TELEMETRY GENERIC_TORQUER GENERIC_TORQUER_DEV_HK_TLM_T LITTLE_ENDIAN "GENERIC_TO
   APPEND_ITEM    DEVMSSTREAMDELAY     32 UINT         "Device stream delay (in milliseconds, 0 means no data or not streaming)"
 
 TELEMETRY GENERIC_TORQUER GENERIC_TORQUER_DEV_GENERIC_TORQUER_TLM_T LITTLE_ENDIAN "GENERIC_TORQUER_DeviceGeneric_torquerTlm_t"
-  APPEND_ID_ITEM CCSDS_STREAMID       16 UINT 0x08FC  "CCSDS Packet Identification" BIG_ENDIAN
+  APPEND_ID_ITEM CCSDS_STREAMID       16 UINT 0x093C  "CCSDS Packet Identification" BIG_ENDIAN
   APPEND_ITEM    CCSDS_SEQUENCE       16 UINT         "CCSDS Packet Sequence Control" BIG_ENDIAN
   APPEND_ITEM    CCSDS_LENGTH         16 UINT         "CCSDS Packet Data Length" BIG_ENDIAN
   APPEND_ITEM    CCSDS_SECONDS        32 UINT         "CCSDS Telemetry Secondary Header (seconds)"

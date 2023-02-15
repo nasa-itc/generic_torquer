@@ -30,12 +30,12 @@
 #define GENERIC_TORQUER_SEND_DEV_DATA_CC       8
 
 /* Added stuff from previous torquers */
-#define GENERIC_TORQUER_ENABLE_CC              9
-#define GENERIC_TORQUER_DISABLE_CC             10
-#define GENERIC_TORQUER_DIRECTION_CC           11
-#define GENERIC_TORQUER_TIME_HIGH_CC           12
-#define GENERIC_TORQUER_PERCENT_ON_CC          13
-#define GENERIC_TORQUER_3AXIS_PCT_ON_CC        14
+#define GENERIC_TORQUER_ENABLE_CC              10
+#define GENERIC_TORQUER_DISABLE_CC             11
+#define GENERIC_TORQUER_DIRECTION_CC           12
+#define GENERIC_TORQUER_TIME_HIGH_CC           13
+#define GENERIC_TORQUER_PERCENT_ON_CC          14
+#define GENERIC_TORQUER_3AXIS_PCT_ON_CC        15
 
 /*************************************************************************/
 
@@ -172,9 +172,6 @@ typedef struct
 typedef struct
 {
     uint8   TlmHeader[CFE_SB_TLM_HDR_SIZE];
-    uint8   CommandErrorCount;
-    uint8   CommandCount;
-    uint32  TrqPeriod;
     GENERIC_TORQUER_HkTlm_Payload_t Payload;
 
 } OS_PACK GENERIC_TORQUER_HkTlm_t;
