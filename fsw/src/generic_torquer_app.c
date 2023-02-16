@@ -31,7 +31,7 @@ static int32 GENERIC_TORQUER_ReportHousekeeping(const CFE_SB_CmdHdr_t *Msg);
 static int32 GENERIC_TORQUER_ResetCounters(void);//const GENERIC_TORQUER_ResetCounters_t *Msg);
 static int32 GENERIC_TORQUER_Noop(const GENERIC_TORQUER_Noop_t *Msg);
 
-static bool GENERIC_TORQUER_VerifyCmdLength(CFE_SB_MsgPtr_t Msg, uint16 ExpectedLength);
+int32 GENERIC_TORQUER_VerifyCmdLength(CFE_SB_MsgPtr_t msg, uint16 expected_length);
 
 /*
 ** Global Data
@@ -413,20 +413,11 @@ static void GENERIC_TORQUER_ProcessGroundCommand(CFE_SB_MsgPtr_t Msg)
         ** Enable Command
         */
         case GENERIC_TORQUER_ENABLE_CC:
-            printf("In the GENERIC_TORQUER_ENABLE stuff\n");
-            printf("%d\n", GENERIC_TORQUER_VerifyCmdLength(GENERIC_TORQUER_AppData.MsgPtr, GENERIC_TORQUER_ENABLE_DISABLE_CMD_LEN) == OS_SUCCESS);
-            printf("%d\n", OS_SUCCESS);
             if (GENERIC_TORQUER_VerifyCmdLength(GENERIC_TORQUER_AppData.MsgPtr, GENERIC_TORQUER_ENABLE_DISABLE_CMD_LEN) == OS_SUCCESS)
             {
                 CFE_EVS_SendEvent(GENERIC_TORQUER_COMMANDENABLE_INF_EID, CFE_EVS_INFORMATION, "TRQ: Device enable command received");
                 GENERIC_TORQUER_Enable_Disable(GENERIC_TORQUER_AppData.MsgPtr);
             }   
-            else
-            {
-                printf("Something went wrong; maybe the command length?\n");
-                printf("The two lengths are %d and %d\n", CFE_SB_GetTotalMsgLength(GENERIC_TORQUER_AppData.MsgPtr), GENERIC_TORQUER_ENABLE_DISABLE_CMD_LEN);
-
-            }
             break;
 
         /*
@@ -438,11 +429,6 @@ static void GENERIC_TORQUER_ProcessGroundCommand(CFE_SB_MsgPtr_t Msg)
                 CFE_EVS_SendEvent(GENERIC_TORQUER_COMMANDDISABLE_INF_EID, CFE_EVS_INFORMATION, "TRQ: Device disable command received");
                 GENERIC_TORQUER_Enable_Disable(GENERIC_TORQUER_AppData.MsgPtr);
             }   
-            else
-            {
-                printf("Something went wrong; maybe the command length?\n");
-                printf("The two lengths are %d and %d.\n", GENERIC_TORQUER_ENABLE_DISABLE_CMD_LEN, GENERIC_TORQUER_AppData.MsgPtr);
-            }
             break;
 
         /*
@@ -911,7 +897,7 @@ void GENERIC_TORQUER_3Axis_Pct_On(CFE_SB_MsgPtr_t msg)
 /*        Verify command packet length                                        */
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
-static bool GENERIC_TORQUER_VerifyCmdLength(CFE_SB_MsgPtr_t msg, uint16 expected_length)
+int32 GENERIC_TORQUER_VerifyCmdLength(CFE_SB_MsgPtr_t msg, uint16 expected_length)
 {     
     int32 status = OS_SUCCESS;
     CFE_SB_MsgId_t msg_id = 0xFFFF;
