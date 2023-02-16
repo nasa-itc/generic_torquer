@@ -260,7 +260,6 @@ static int32 GENERIC_TORQUER_AppInit(void)
     /*
     ** Initialize GENERIC_TORQUER interfaces
     */ 
-//    GENERIC_TORQUER_AppData.HkBuf.HkTlm.TrqPeriod = TRQ_PERIOD;
     for(i = 0; i < 3; i++)
     {
         GENERIC_TORQUER_AppData.trqDevice[i].trq_num = i;
@@ -628,20 +627,20 @@ void GENERIC_TORQUER_Enable_Disable(CFE_SB_MsgPtr_t msg)
     uint8_t value;
 
     /* Check TrqNum Valid */
-    if (enable_cmd->TrqNum > 3)
-    {
-        CFE_EVS_SendEvent(GENERIC_TORQUER_COMMANDNUM_ERR_EID, CFE_EVS_ERROR, 
-                "TRQ: invalid TrqNum value of = %d ", enable_cmd->TrqNum);
-        GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
-        return;
-    }
+//    if (enable_cmd->TrqNum > 3)
+//    {
+//        CFE_EVS_SendEvent(GENERIC_TORQUER_COMMANDNUM_ERR_EID, CFE_EVS_ERROR, 
+//                "TRQ: invalid TrqNum value of = %d ", enable_cmd->TrqNum);
+//        GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
+//        return;
+//    }
 
     /* Determine if enable or disable */
     if (CommandCode == GENERIC_TORQUER_ENABLE_CC)
     {
         /* Set TRQ to zero before enabling */
-        trq_command(&GENERIC_TORQUER_AppData.trqDevice[enable_cmd->TrqNum], 0, 
-			GENERIC_TORQUER_AppData.TrqInfo[enable_cmd->TrqNum].Direction);
+//        trq_command(&GENERIC_TORQUER_AppData.trqDevice[enable_cmd->TrqNum], 0, 
+//			GENERIC_TORQUER_AppData.TrqInfo[enable_cmd->TrqNum].Direction);
         value = TRQ_ENABLED;
     }
     else
@@ -650,12 +649,14 @@ void GENERIC_TORQUER_Enable_Disable(CFE_SB_MsgPtr_t msg)
     }
 
     /* Set GPIO Enable */
-    status = gpio_write(&GENERIC_TORQUER_AppData.trqEnable[enable_cmd->TrqNum], value);
+    status = gpio_write(&GENERIC_TORQUER_AppData.trqEnable[0], value);
+    status = gpio_write(&GENERIC_TORQUER_AppData.trqEnable[1], value);
+    status = gpio_write(&GENERIC_TORQUER_AppData.trqEnable[2], value);
 
     /* Verify success */
     if (status == GPIO_SUCCESS)
     {
-        GENERIC_TORQUER_AppData.TrqInfo[enable_cmd->TrqNum].Enabled = value;
+//        GENERIC_TORQUER_AppData.TrqInfo[enable_cmd->TrqNum].Enabled = value;
         GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandCounter++;
     }
     else
