@@ -642,10 +642,12 @@ void GENERIC_TORQUER_Enable_Disable(CFE_SB_MsgPtr_t msg)
 //        trq_command(&GENERIC_TORQUER_AppData.trqDevice[enable_cmd->TrqNum], 0, 
 //			GENERIC_TORQUER_AppData.TrqInfo[enable_cmd->TrqNum].Direction);
         value = TRQ_ENABLED;
+        printf("Enabling torquers...\n");
     }
     else
     {
         value = TRQ_DISABLED;
+	printf("Disabling torquers...\n");
     }
 
     /* Set GPIO Enable */
@@ -658,10 +660,12 @@ void GENERIC_TORQUER_Enable_Disable(CFE_SB_MsgPtr_t msg)
     {
 //        GENERIC_TORQUER_AppData.TrqInfo[enable_cmd->TrqNum].Enabled = value;
         GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandCounter++;
+        printf("Success :D \n");
     }
     else
     {
         GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
+        printf("Failure :( \n");
     }
     return;
 }
