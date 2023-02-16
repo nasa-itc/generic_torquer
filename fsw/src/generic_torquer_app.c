@@ -413,11 +413,20 @@ static void GENERIC_TORQUER_ProcessGroundCommand(CFE_SB_MsgPtr_t Msg)
         ** Enable Command
         */
         case GENERIC_TORQUER_ENABLE_CC:
+            printf("In the GENERIC_TORQUER_ENABLE stuff\n");
+            printf("%d\n", GENERIC_TORQUER_VerifyCmdLength(GENERIC_TORQUER_AppData.MsgPtr, GENERIC_TORQUER_ENABLE_DISABLE_CMD_LEN) == OS_SUCCESS);
+            printf("%d\n", OS_SUCCESS);
             if (GENERIC_TORQUER_VerifyCmdLength(GENERIC_TORQUER_AppData.MsgPtr, GENERIC_TORQUER_ENABLE_DISABLE_CMD_LEN) == OS_SUCCESS)
             {
                 CFE_EVS_SendEvent(GENERIC_TORQUER_COMMANDENABLE_INF_EID, CFE_EVS_INFORMATION, "TRQ: Device enable command received");
                 GENERIC_TORQUER_Enable_Disable(GENERIC_TORQUER_AppData.MsgPtr);
             }   
+            else
+            {
+                printf("Something went wrong; maybe the command length?\n");
+                printf("The two lengths are %d and %d\n", CFE_SB_GetTotalMsgLength(GENERIC_TORQUER_AppData.MsgPtr), GENERIC_TORQUER_ENABLE_DISABLE_CMD_LEN);
+
+            }
             break;
 
         /*
@@ -429,6 +438,11 @@ static void GENERIC_TORQUER_ProcessGroundCommand(CFE_SB_MsgPtr_t Msg)
                 CFE_EVS_SendEvent(GENERIC_TORQUER_COMMANDDISABLE_INF_EID, CFE_EVS_INFORMATION, "TRQ: Device disable command received");
                 GENERIC_TORQUER_Enable_Disable(GENERIC_TORQUER_AppData.MsgPtr);
             }   
+            else
+            {
+                printf("Something went wrong; maybe the command length?\n");
+                printf("The two lengths are %d and %d.\n", GENERIC_TORQUER_ENABLE_DISABLE_CMD_LEN, GENERIC_TORQUER_AppData.MsgPtr);
+            }
             break;
 
         /*
@@ -897,29 +911,31 @@ void GENERIC_TORQUER_3Axis_Pct_On(CFE_SB_MsgPtr_t msg)
 /*        Verify command packet length                                        */
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
-static bool GENERIC_TORQUER_VerifyCmdLength(CFE_SB_MsgPtr_t Msg, uint16 ExpectedLength)
-{
-    bool result = true;
+static bool GENERIC_TORQUER_VerifyCmdLength(CFE_SB_MsgPtr_t msg, uint16 expected_length)
+{     
+    int32 status = OS_SUCCESS;
+    CFE_SB_MsgId_t msg_id = 0xFFFF;
+    uint16 cmd_code = 0xFFFF;
+    uint16 actual_length = CFE_SB_GetTotalMsgLength(msg);
 
-    uint16 ActualLength = CFE_SB_GetTotalMsgLength(Msg);
-
-    /*
-    ** Verify the command packet length.
-    */
-    if (ExpectedLength != ActualLength)
+    if (expected_length == actual_length)
     {
-        CFE_SB_MsgId_t MessageID   = CFE_SB_GetMsgId(Msg);
-        uint16         CommandCode = CFE_SB_GetCmdCode(Msg);
+        /* Increment the command counter upon receipt of an invalid command */
+        GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandCounter++;
+    }
+    else
+    {
+        msg_id = CFE_SB_GetMsgId(msg);
+        cmd_code = CFE_SB_GetCmdCode(msg);
 
-        CFE_EVS_SendEvent(GENERIC_TORQUER_LEN_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "Invalid Msg length: ID = 0x%X,  CC = %d, Len = %d, Expected = %d",
-                          (unsigned int)CFE_SB_MsgIdToValue(MessageID), CommandCode, ActualLength, ExpectedLength);
+        CFE_EVS_SendEvent(GENERIC_TORQUER_LEN_ERR_EID, CFE_EVS_ERROR,
+           "Invalid msg length: ID = 0x%X,  CC = %d, Len = %d, Expected = %d",
+              msg_id, cmd_code, actual_length, expected_length);
 
-        result = false;
+        status = OS_ERROR;
 
+        /* Increment the command error counter upon receipt of an invalid command */
         GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
     }
-
-    return (result);
-
-} /* End of GENERIC_TORQUER_VerifyCmdLength() */
+    return status;
+}  /* End of GENERIC_TORQUER_VerifyCmdLength() */

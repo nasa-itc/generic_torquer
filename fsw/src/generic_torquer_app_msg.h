@@ -91,7 +91,6 @@ typedef struct
 typedef struct
 {
     uint8   CmdHeader[CFE_SB_CMD_HDR_SIZE];
-//    uint8   TrqNum;
 
 } OS_PACK GENERIC_TORQUER_Enable_Disable_Cmd_t;
 #define GENERIC_TORQUER_ENABLE_DISABLE_CMD_LEN sizeof(GENERIC_TORQUER_Enable_Disable_Cmd_t)
