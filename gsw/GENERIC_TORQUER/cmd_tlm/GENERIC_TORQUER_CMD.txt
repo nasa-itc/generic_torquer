@@ -83,8 +83,8 @@ COMMAND GENERIC_TORQUER GENERIC_TORQUER_DIRECTION_CC BIG_ENDIAN "Generic_torquer
   APPEND_PARAMETER CCSDS_LENGTH        16 UINT MIN_UINT16 MAX_UINT16 3      "CCSDS Packet Data Length" 
   APPEND_PARAMETER CCSDS_FC            8  UINT MIN_UINT8 MAX_UINT8 12       "CCSDS Command Function Code" 
   APPEND_PARAMETER CCSDS_CHECKSUM      8  UINT MIN_UINT8 MAX_UINT8 0        "CCSDS Command Checksum"
-  APPEND_PARAMETER TRQNUM              8  UINT MIN_UINT8 MAX_UINT8 0        "The number corresponding to the torquer"
-  APPEND_PARAMETER DIRECTION           8  UINT MIN_UINT8 MAX_UINT8 0        "The direction for the current to flow"
+  APPEND_PARAMETER TRQNUM              8  UINT 0         2         0        "The number corresponding to the torquer"
+  APPEND_PARAMETER DIRECTION           8  UINT 0         1         0        "The direction for the current to flow"
   
 COMMAND GENERIC_TORQUER GENERIC_TORQUER_TIME_HIGH_CC BIG_ENDIAN "Generic_torquer Time High Command"
   APPEND_PARAMETER CCSDS_STREAMID      16 UINT MIN_UINT16 MAX_UINT16 0x193A "CCSDS Packet Identification" 
@@ -92,7 +92,7 @@ COMMAND GENERIC_TORQUER GENERIC_TORQUER_TIME_HIGH_CC BIG_ENDIAN "Generic_torquer
   APPEND_PARAMETER CCSDS_LENGTH        16 UINT MIN_UINT16 MAX_UINT16 6      "CCSDS Packet Data Length" 
   APPEND_PARAMETER CCSDS_FC            8  UINT MIN_UINT8 MAX_UINT8 13       "CCSDS Command Function Code" 
   APPEND_PARAMETER CCSDS_CHECKSUM      8  UINT MIN_UINT8 MAX_UINT8 0        "CCSDS Command Checksum"
-  APPEND_PARAMETER TRQNUM              8  UINT MIN_UINT8 MAX_UINT8 0        "The number corresponding to the torquer"
+  APPEND_PARAMETER TRQNUM              8  UINT 0         2         0        "The number corresponding to the torquer"
   APPEND_PARAMETER TIME_HIGH           32 UINT MIN_UINT32 MAX_UINT32 0      "The amount of time for the current to flow"
  
 COMMAND GENERIC_TORQUER GENERIC_TORQUER_PERCENT_ON_CC BIG_ENDIAN "Generic_torquer Percent On Command"
@@ -101,7 +101,7 @@ COMMAND GENERIC_TORQUER GENERIC_TORQUER_PERCENT_ON_CC BIG_ENDIAN "Generic_torque
   APPEND_PARAMETER CCSDS_LENGTH        16 UINT MIN_UINT16 MAX_UINT16 4      "CCSDS Packet Data Length" 
   APPEND_PARAMETER CCSDS_FC            8  UINT MIN_UINT8 MAX_UINT8 14       "CCSDS Command Function Code" 
   APPEND_PARAMETER CCSDS_CHECKSUM      8  UINT MIN_UINT8 MAX_UINT8 0        "CCSDS Command Checksum"
-  APPEND_PARAMETER TRQNUM              8  UINT MIN_UINT8 MAX_UINT8 0        "The number corresponding to the torquer"
-  APPEND_PARAMETER DIRECTION           8  UINT MIN_UINT8 MAX_UINT8 0        "The direction for the current to flow"
-  APPEND_PARAMETER PERCENT_ON          8  UINT MIN_UINT8 MAX_UINT8 0        "The percent of maximum current to use"
+  APPEND_PARAMETER TRQNUM              8  UINT 0         2         0        "The number corresponding to the torquer"
+  APPEND_PARAMETER DIRECTION           8  UINT 0         1         0        "The direction for the current to flow"
+  APPEND_PARAMETER PERCENT_ON          8  UINT 0         100       0        "The percent of maximum current to use"
 

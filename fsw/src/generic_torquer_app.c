@@ -642,12 +642,10 @@ void GENERIC_TORQUER_Enable_Disable(CFE_SB_MsgPtr_t msg)
 //        trq_command(&GENERIC_TORQUER_AppData.trqDevice[enable_cmd->TrqNum], 0, 
 //			GENERIC_TORQUER_AppData.TrqInfo[enable_cmd->TrqNum].Direction);
         value = TRQ_ENABLED;
-        printf("Enabling torquers...\n");
     }
     else
     {
         value = TRQ_DISABLED;
-	printf("Disabling torquers...\n");
     }
 
     /* Set GPIO Enable */
@@ -655,17 +653,19 @@ void GENERIC_TORQUER_Enable_Disable(CFE_SB_MsgPtr_t msg)
     status = gpio_write(&GENERIC_TORQUER_AppData.trqEnable[1], value);
     status = gpio_write(&GENERIC_TORQUER_AppData.trqEnable[2], value);
 
+    GENERIC_TORQUER_AppData.TrqInfo[0].Enabled = 1;
+    GENERIC_TORQUER_AppData.TrqInfo[1].Enabled = 1;
+    GENERIC_TORQUER_AppData.TrqInfo[2].Enabled = 1;
+
     /* Verify success */
     if (status == GPIO_SUCCESS)
     {
 //        GENERIC_TORQUER_AppData.TrqInfo[enable_cmd->TrqNum].Enabled = value;
         GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandCounter++;
-        printf("Success :D \n");
     }
     else
     {
         GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
-        printf("Failure :( \n");
     }
     return;
 }
@@ -792,6 +792,9 @@ void GENERIC_TORQUER_Percent_On(CFE_SB_MsgPtr_t msg)
     /* Check enabled */
     if (GENERIC_TORQUER_AppData.TrqInfo[percent_on_cmd->TrqNum].Enabled != TRQ_ENABLED)
     {
+	printf("%d \n", TRQ_ENABLED);
+	printf("%d \n", GENERIC_TORQUER_AppData.TrqInfo[percent_on_cmd->TrqNum].Enabled);
+
         CFE_EVS_SendEvent(GENERIC_TORQUER_COMMANDENABLED_ERR_EID, CFE_EVS_ERROR, 
                 "TRQ: Torquer %d not enabled ", percent_on_cmd->TrqNum);
         GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
