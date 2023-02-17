@@ -247,15 +247,6 @@ static int32 GENERIC_TORQUER_AppInit(void)
         return (status);
     }
 
-//    status = GENERIC_TORQUER_DeviceInit();
-//    if (status != CFE_SUCCESS)
-//    {
-//        CFE_ES_WriteToSysLog("Generic_torquer App: Error Initializing Device, RC = 0x%08lX\n", (unsigned long)status);
-//
-//        return (status);
-//    }
-
-    
     /* ADDED SECTION */
     /*
     ** Initialize GENERIC_TORQUER interfaces
@@ -303,7 +294,7 @@ static int32 GENERIC_TORQUER_AppInit(void)
     ** Always reset all counters during application initialization 
     */
 //    CFE_SB_MsgPtr_t Msg;
-    GENERIC_TORQUER_ResetCounters(); //(GENERIC_TORQUER_ResetCounters_t *)Msg);
+    GENERIC_TORQUER_ResetCounters(); 
 
     /* END ADDED SECTION */
 
@@ -388,7 +379,7 @@ static void GENERIC_TORQUER_ProcessGroundCommand(CFE_SB_MsgPtr_t Msg)
     switch (CommandCode)
     {
         case GENERIC_TORQUER_APP_NOOP_CC:
-            if (GENERIC_TORQUER_VerifyCmdLength(Msg, sizeof(GENERIC_TORQUER_Noop_t)))
+            if (GENERIC_TORQUER_VerifyCmdLength(Msg, sizeof(GENERIC_TORQUER_Noop_t)) == OS_SUCCESS)
             {
                 GENERIC_TORQUER_Noop((GENERIC_TORQUER_Noop_t *)Msg);
             } else {
@@ -398,7 +389,7 @@ static void GENERIC_TORQUER_ProcessGroundCommand(CFE_SB_MsgPtr_t Msg)
             break;
 
         case GENERIC_TORQUER_APP_RESET_COUNTERS_CC:
-            if (GENERIC_TORQUER_VerifyCmdLength(Msg, sizeof(GENERIC_TORQUER_ResetCounters_t)))
+            if (GENERIC_TORQUER_VerifyCmdLength(Msg, sizeof(GENERIC_TORQUER_ResetCounters_t)) == OS_SUCCESS)
             {
                 GENERIC_TORQUER_ResetCounters();
             } else {
@@ -438,7 +429,7 @@ static void GENERIC_TORQUER_ProcessGroundCommand(CFE_SB_MsgPtr_t Msg)
             if (GENERIC_TORQUER_VerifyCmdLength(GENERIC_TORQUER_AppData.MsgPtr, GENERIC_TORQUER_DIRECTION_CMD_LEN) == OS_SUCCESS)
             {
                 CFE_EVS_SendEvent(GENERIC_TORQUER_COMMANDDIRECTION_INF_EID, CFE_EVS_DEBUG, "TRQ: Direction command received");
-                GENERIC_TORQUER_Enable_Disable(GENERIC_TORQUER_AppData.MsgPtr);
+                GENERIC_TORQUER_Direction(GENERIC_TORQUER_AppData.MsgPtr);
             }   
             break;
 
@@ -679,7 +670,7 @@ void GENERIC_TORQUER_Enable_Disable(CFE_SB_MsgPtr_t msg)
 /*	  the torquer.				                              */
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
-void TRQ_Direction(CFE_SB_MsgPtr_t msg)
+void GENERIC_TORQUER_Direction(CFE_SB_MsgPtr_t msg)
 {
     int32 status;
     GENERIC_TORQUER_Direction_Cmd_t* direction_cmd = (GENERIC_TORQUER_Direction_Cmd_t*) msg;
