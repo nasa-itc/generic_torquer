@@ -11,14 +11,10 @@
 ** Include Files:
 */
 
-//#include "string.h"
-//#include "generic_torquer_app_events.h"
-
 #include "generic_torquer_app.h"
 #include "generic_torquer_app_version.h"
 #include "generic_torquer_app_msgids.h"
 #include "generic_torquer_app_perfids.h"
-//#include "generic_torquer_device.h"
 
 #include "cfe_error.h"
 
@@ -28,7 +24,7 @@ static int32 GENERIC_TORQUER_AppInit(void);
 static void  GENERIC_TORQUER_ProcessCommandPacket(CFE_SB_MsgPtr_t Msg);
 static void  GENERIC_TORQUER_ProcessGroundCommand(CFE_SB_MsgPtr_t Msg);
 static int32 GENERIC_TORQUER_ReportHousekeeping(const CFE_SB_CmdHdr_t *Msg);
-static int32 GENERIC_TORQUER_ResetCounters(void);//const GENERIC_TORQUER_ResetCounters_t *Msg);
+static int32 GENERIC_TORQUER_ResetCounters(void);
 static int32 GENERIC_TORQUER_Noop(const GENERIC_TORQUER_Noop_t *Msg);
 
 int32 GENERIC_TORQUER_VerifyCmdLength(CFE_SB_MsgPtr_t msg, uint16 expected_length);
@@ -455,79 +451,6 @@ static void GENERIC_TORQUER_ProcessGroundCommand(CFE_SB_MsgPtr_t Msg)
             }   
             break;
 
-        /*
-        ** 3 Axis Percent On Command
-        */
-        case GENERIC_TORQUER_3AXIS_PCT_ON_CC:
-            if (GENERIC_TORQUER_VerifyCmdLength(GENERIC_TORQUER_AppData.MsgPtr, GENERIC_TORQUER_3AXIS_PCT_ON_CMD_LEN) == OS_SUCCESS)
-            {
-                CFE_EVS_SendEvent(GENERIC_TORQUER_COMMAND_3AXIS_PCT_INF_EID, CFE_EVS_DEBUG, "TRQ: 3 Axis Percent on command received");
-                GENERIC_TORQUER_3Axis_Pct_On(GENERIC_TORQUER_AppData.MsgPtr);
-            }   
-            break;
-
-
-
-
-        /*
-        ** TODO: Edit and add more command codes as appropriate for the application
-        */
-/*
-        case GENERIC_TORQUER_APP_RESET_DEV_CNTRS_CC:
-            GENERIC_TORQUER_DeviceResetCounters();
-            break;
-
-        case GENERIC_TORQUER_GET_DEV_DATA_CC:
-            if (GENERIC_TORQUER_VerifyCmdLength(Msg, sizeof(GENERIC_TORQUER_GetDevData_cmd_t))) {
-                GENERIC_TORQUER_DeviceGetGeneric_torquerDataCommand();
-            } else {
-                GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
-            }
-            break;
-
-        case GENERIC_TORQUER_CONFIG_CC:
-            if (GENERIC_TORQUER_VerifyCmdLength(Msg, sizeof(GENERIC_TORQUER_Config_cmd_t)))
-            {
-                GENERIC_TORQUER_DeviceConfigurationCommand(((GENERIC_TORQUER_Config_cmd_t *)Msg)->MillisecondStreamDelay);
-            } else {
-                GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
-            }
-            break;
-
-        case GENERIC_TORQUER_OTHER_CMD_CC:
-            if (GENERIC_TORQUER_VerifyCmdLength(Msg, sizeof(GENERIC_TORQUER_Other_cmd_t)))
-            {
-                GENERIC_TORQUER_DeviceOtherCommand();
-            } else {
-                GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
-            }
-            break;
-
-        case GENERIC_TORQUER_RAW_CMD_CC:
-            if (GENERIC_TORQUER_VerifyCmdLength(Msg, sizeof(GENERIC_TORQUER_Raw_cmd_t)))
-            {
-                GENERIC_TORQUER_DeviceRawCommand(((GENERIC_TORQUER_Raw_cmd_t *)Msg)->RawCmd, sizeof(((GENERIC_TORQUER_Raw_cmd_t *)Msg)->RawCmd));
-            } else {
-                GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
-            }
-            break;
-
-        case GENERIC_TORQUER_SEND_DEV_HK_CC:
-            if (GENERIC_TORQUER_VerifyCmdLength(Msg, sizeof(GENERIC_TORQUER_SendDevHk_cmd_t))) {
-                GENERIC_TORQUER_ReportDeviceHousekeeping();
-            } else {
-                GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
-            }
-            break;
-
-        case GENERIC_TORQUER_SEND_DEV_DATA_CC:
-            if (GENERIC_TORQUER_VerifyCmdLength(Msg, sizeof(GENERIC_TORQUER_SendDevData_cmd_t))) {
-                GENERIC_TORQUER_ReportDeviceGeneric_torquerData();
-            } else {
-                GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
-            }
-            break;
-*/
 
         /* default case already found during FC vs length test */
         default:
@@ -617,21 +540,9 @@ void GENERIC_TORQUER_Enable_Disable(CFE_SB_MsgPtr_t msg)
     uint8 CommandCode = CFE_SB_GetCmdCode(msg);
     uint8_t value;
 
-    /* Check TrqNum Valid */
-//    if (enable_cmd->TrqNum > 3)
-//    {
-//        CFE_EVS_SendEvent(GENERIC_TORQUER_COMMANDNUM_ERR_EID, CFE_EVS_ERROR, 
-//                "TRQ: invalid TrqNum value of = %d ", enable_cmd->TrqNum);
-//        GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
-//        return;
-//    }
-
     /* Determine if enable or disable */
     if (CommandCode == GENERIC_TORQUER_ENABLE_CC)
     {
-        /* Set TRQ to zero before enabling */
-//        trq_command(&GENERIC_TORQUER_AppData.trqDevice[enable_cmd->TrqNum], 0, 
-//			GENERIC_TORQUER_AppData.TrqInfo[enable_cmd->TrqNum].Direction);
         value = TRQ_ENABLED;
     }
     else
@@ -651,7 +562,6 @@ void GENERIC_TORQUER_Enable_Disable(CFE_SB_MsgPtr_t msg)
     /* Verify success */
     if (status == GPIO_SUCCESS)
     {
-//        GENERIC_TORQUER_AppData.TrqInfo[enable_cmd->TrqNum].Enabled = value;
         GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandCounter++;
     }
     else
@@ -841,50 +751,6 @@ void GENERIC_TORQUER_Percent_On(CFE_SB_MsgPtr_t msg)
         GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
     }
     return;
-}
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
-/*                                                                            */
-/* Name:  GENERIC_TORQUER_3Axis_Pct_On()                                      */
-/*                                                                            */
-/* Purpose:                                                                   */
-/*        This function sets the fraction of power for all three torquers     */
-/*	  to use.				    	                      */
-/*                                                                            */
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
-void GENERIC_TORQUER_3Axis_Pct_On(CFE_SB_MsgPtr_t msg)
-{
-    int32 status;
-    GENERIC_TORQUER_3Axis_Pct_On_Cmd_t* Trq_3Axis_Cmd = (GENERIC_TORQUER_3Axis_Pct_On_Cmd_t*) msg;
-    GENERIC_TORQUER_Percent_On_Cmd_t  Zero_Percent_Cmd;
-    CFE_SB_MsgPtr_t percent_on_cmd;
-    uint8 i;
-
-    Zero_Percent_Cmd.Direction = 0;
-    Zero_Percent_Cmd.PercentOn = 0;
-
-    // Take Mutex for stopping mag reading while torquing
-    if(OS_MutSemTake(GENERIC_TORQUER_AppData.MagTrqMutex) == OS_SUCCESS)
-    {
-        // Command each axis on
-        for(i = 0; i < 3; i++)
-        {
-            percent_on_cmd = (CFE_SB_MsgPtr_t) &Trq_3Axis_Cmd->TrqPctOnCmd[i];
-            GENERIC_TORQUER_Percent_On(percent_on_cmd);
-        }
-
-        // Command each axis off
-        for(i = 0; i < 3; i++)
-        {
-            Zero_Percent_Cmd.TrqNum = i;
-            GENERIC_TORQUER_Percent_On((CFE_SB_MsgPtr_t) &Zero_Percent_Cmd);
-        }
-
-        // Sleep for 2ms to give TRQ time to decay to zero
-        OS_TaskDelay(2);
-
-        OS_MutSemGive(GENERIC_TORQUER_AppData.MagTrqMutex);
-    }
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/

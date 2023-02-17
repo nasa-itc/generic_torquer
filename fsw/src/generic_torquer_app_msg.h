@@ -35,7 +35,6 @@
 #define GENERIC_TORQUER_DIRECTION_CC           12
 #define GENERIC_TORQUER_TIME_HIGH_CC           13
 #define GENERIC_TORQUER_PERCENT_ON_CC          14
-#define GENERIC_TORQUER_3AXIS_PCT_ON_CC        15
 
 /*************************************************************************/
 
@@ -131,18 +130,6 @@ typedef struct
 
 } OS_PACK GENERIC_TORQUER_Percent_On_Cmd_t;
 #define GENERIC_TORQUER_PERCENT_ON_CMD_LEN sizeof(GENERIC_TORQUER_Percent_On_Cmd_t)
-
-/*
-** 3 Axis Percent on command
-**    Sent from the ADCS Application
-*/
-typedef struct
-{
-    uint8   CmdHeader[CFE_SB_CMD_HDR_SIZE];
-    GENERIC_TORQUER_Percent_On_Cmd_t    TrqPctOnCmd[3];
-
-} OS_PACK GENERIC_TORQUER_3Axis_Pct_On_Cmd_t;
-#define GENERIC_TORQUER_3AXIS_PCT_ON_CMD_LEN sizeof(GENERIC_TORQUER_3Axis_Pct_On_Cmd_t)
 
 /*
 ** GENERIC_TORQUER info struct

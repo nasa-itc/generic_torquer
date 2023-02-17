@@ -60,7 +60,7 @@ typedef struct
     CFE_SB_PipeId_t CommandPipe;
     CFE_SB_MsgPtr_t MsgPtr;
     uint32 RunStatus;                   /* App run status for controlling the application state */
-    uint32 MagTrqMutex;                 /* Mutex between trq and mag */
+//    uint32 MagTrqMutex;                 /* Mutex between trq and mag */
 
     GENERIC_TORQUER_Info_t TrqInfo[3];
 
@@ -94,7 +94,6 @@ void  GENERIC_TORQUER_Enable_Disable(CFE_SB_MsgPtr_t msg);
 void  GENERIC_TORQUER_Direction(CFE_SB_MsgPtr_t msg);
 void  GENERIC_TORQUER_Time_High(CFE_SB_MsgPtr_t msg);
 void  GENERIC_TORQUER_Percent_On(CFE_SB_MsgPtr_t msg);
-void  GENERIC_TORQUER_3Axis_Pct_On(CFE_SB_MsgPtr_t msg);
 
 #endif /* _generic_torquer_app_h_ */
 
