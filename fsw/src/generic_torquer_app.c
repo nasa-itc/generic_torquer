@@ -729,11 +729,7 @@ void GENERIC_TORQUER_Percent_On(CFE_SB_MsgPtr_t msg)
     {
         percent_on_cmd->PercentOn = 0;
     }
-//    else if (percent_on_cmd->PercentOn < TRQ_MIN_PERCENT)
-//    {
-//        percent_on_cmd->PercentOn = TRQ_MIN_PERCENT;
-//    }
-    
+   
     /* Set Percent On */
     status = trq_command(&GENERIC_TORQUER_AppData.trqDevice[percent_on_cmd->TrqNum], percent_on_cmd->PercentOn, percent_on_cmd->Direction);
 
