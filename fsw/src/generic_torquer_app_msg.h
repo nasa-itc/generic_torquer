@@ -82,8 +82,6 @@ typedef struct
     uint8    RawCmd[5];
 } GENERIC_TORQUER_Raw_cmd_t;
 
-/* Added section of things */
-
 /*
 ** Enable / Disable command
 */
