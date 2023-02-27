@@ -260,41 +260,10 @@ static int32 GENERIC_TORQUER_AppInit(void)
         }
     }
 
-    /*
-    ** Initialize GPIO interfaces
-    */
-/* 
-    GENERIC_TORQUER_AppData.trqEnable[0].pin = TRQ1_GPIO;
-    GENERIC_TORQUER_AppData.trqEnable[0].direction = GPIO_OUTPUT;
-    GENERIC_TORQUER_AppData.trqEnable[1].pin = TRQ2_GPIO;
-    GENERIC_TORQUER_AppData.trqEnable[1].direction = GPIO_OUTPUT;
-    GENERIC_TORQUER_AppData.trqEnable[2].pin = TRQ3_GPIO;
-    GENERIC_TORQUER_AppData.trqEnable[2].direction = GPIO_OUTPUT;
-    for(i = 0; i < 3; i++)
-    {
-        status = gpio_init(&GENERIC_TORQUER_AppData.trqEnable[i]);
-        if(status != GPIO_SUCCESS)
-        {
-            CFE_EVS_SendEvent(GENERIC_TORQUER_INIT_GPIO_ERR_EID, CFE_EVS_ERROR, "GENERIC_TORQUER: device %d initialization error %d", i, status);
-            return -1; 
-        }
-
-        status = gpio_write(&GENERIC_TORQUER_AppData.trqEnable[i], TRQ_DISABLED);
-        if(status != GPIO_SUCCESS)
-        {
-            CFE_EVS_SendEvent(GENERIC_TORQUER_INIT_GPIO_ERR_EID, CFE_EVS_ERROR, "GENERIC_TORQUER: device %d set disabled error %d", i, status);
-            return -1; 
-        }
-    }
-*/
-
     /* 
     ** Always reset all counters during application initialization 
     */
-//    CFE_SB_MsgPtr_t Msg;
     GENERIC_TORQUER_ResetCounters(); 
-
-    /* END ADDED SECTION */
 
     /* 
      ** Send an information event that the app has initialized. 
@@ -530,7 +499,7 @@ static int32 GENERIC_TORQUER_ResetCounters(void)//const GENERIC_TORQUER_ResetCou
 /* Name:  GENERIC_TORQUER_Enable_Disable()                                    */
 /*                                                                            */
 /* Purpose:                                                                   */
-/*        This function enables or disables GPIO pins.                        */
+/*        This function enables or disables the generic_torquer.              */
 /*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 void GENERIC_TORQUER_Enable_Disable(CFE_SB_MsgPtr_t msg)
@@ -550,18 +519,25 @@ void GENERIC_TORQUER_Enable_Disable(CFE_SB_MsgPtr_t msg)
         value = TRQ_DISABLED;
     }
 
-    /* Set GPIO Enable */
-//    status = gpio_write(&GENERIC_TORQUER_AppData.trqEnable[0], value);
-//    status = gpio_write(&GENERIC_TORQUER_AppData.trqEnable[1], value);
-//    status = gpio_write(&GENERIC_TORQUER_AppData.trqEnable[2], value);
-
+    status = true;
     GENERIC_TORQUER_AppData.TrqInfo[0].Enabled = value;
+    if (GENERIC_TORQUER_AppData.TrqInfo[0].Enabled != value)
+    {
+        status = false;
+    }
     GENERIC_TORQUER_AppData.TrqInfo[1].Enabled = value;
+    if (GENERIC_TORQUER_AppData.TrqInfo[1].Enabled != value)
+    {
+        status = false;
+    }
     GENERIC_TORQUER_AppData.TrqInfo[2].Enabled = value;
-
+    if (GENERIC_TORQUER_AppData.TrqInfo[2].Enabled != value)
+    {
+        status = false;
+    }
+ 
     /* Verify success */
-/*
-    if (status == GPIO_SUCCESS)
+    if (status == true)
     {
         GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandCounter++;
     }
@@ -569,7 +545,6 @@ void GENERIC_TORQUER_Enable_Disable(CFE_SB_MsgPtr_t msg)
     {
         GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
     }
-*/
     return;
 }
 
