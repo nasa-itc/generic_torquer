@@ -74,7 +74,6 @@ void GENERIC_TORQUER_AppMain(void)
     uint32 local_run = CFE_ES_APP_RUN;
     uint8_t i;
 
-
     /*
     ** Register the app with Executive services
     */
@@ -141,7 +140,6 @@ void GENERIC_TORQUER_AppMain(void)
     for(i = 0; i < 3; i++)
     {
         trq_close(&GENERIC_TORQUER_AppData.trqDevice[i]);
-        gpio_close(&GENERIC_TORQUER_AppData.trqEnable[i]);
     }
 
     /*
@@ -243,7 +241,6 @@ static int32 GENERIC_TORQUER_AppInit(void)
         return (status);
     }
 
-    /* ADDED SECTION */
     /*
     ** Initialize GENERIC_TORQUER interfaces
     */ 
@@ -540,6 +537,7 @@ void GENERIC_TORQUER_Enable_Disable(CFE_SB_MsgPtr_t msg)
     if (status == true)
     {
         GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandCounter++;
+        GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.LastSuccessfulStats.Enabled = value;
     }
     else
     {
@@ -587,6 +585,7 @@ void GENERIC_TORQUER_Direction(CFE_SB_MsgPtr_t msg)
     if (status == TRQ_SUCCESS)
     {
         GENERIC_TORQUER_AppData.TrqInfo[direction_cmd->TrqNum].Direction = direction_cmd->Direction;
+        GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.LastSuccessfulStats.Direction = direction_cmd->Direction;
         GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandCounter++;
     }
     else
@@ -635,6 +634,7 @@ void GENERIC_TORQUER_Time_High(CFE_SB_MsgPtr_t msg)
     if (status == TRQ_SUCCESS)
     {
         GENERIC_TORQUER_AppData.TrqInfo[time_high_cmd->TrqNum].TimeHigh = time_high_cmd->TimeHigh;
+        GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.LastSuccessfulStats.TimeHigh = time_high_cmd->TimeHigh;
         GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandCounter++;
     }
     else
@@ -718,6 +718,13 @@ void GENERIC_TORQUER_Percent_On(CFE_SB_MsgPtr_t msg)
         GENERIC_TORQUER_AppData.TrqInfo[percent_on_cmd->TrqNum].TimeHigh = 
 			GENERIC_TORQUER_AppData.trqDevice[percent_on_cmd->TrqNum].timer_high_ns;
         GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandCounter++;
+
+        GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.LastSuccessfulStats.Direction = 
+			GENERIC_TORQUER_AppData.trqDevice[percent_on_cmd->TrqNum].positive_direction;
+        GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.LastSuccessfulStats.TimeHigh = 
+			GENERIC_TORQUER_AppData.trqDevice[percent_on_cmd->TrqNum].timer_high_ns;
+        GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.LastSuccessfulStats.PercentOn = 
+            percent_on_cmd->PercentOn;
     }
     else
     {

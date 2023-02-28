@@ -137,7 +137,7 @@ typedef struct
     uint8   Enabled;
     uint8   Direction;
     uint32  TimeHigh;
-
+    uint8   PercentOn;
 } OS_PACK GENERIC_TORQUER_Info_t;
 #define GENERIC_TORQUER_INFO_LEN sizeof(GENERIC_TORQUER_Info_t)
 
@@ -151,6 +151,7 @@ typedef struct
 {
     uint8 CommandErrorCounter;
     uint8 CommandCounter;
+    GENERIC_TORQUER_Info_t LastSuccessfulStats;
 } OS_PACK GENERIC_TORQUER_HkTlm_Payload_t;
 
 typedef struct
