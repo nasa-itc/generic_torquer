@@ -1,102 +1,100 @@
 /*******************************************************************************
-** File: 
-**  generic_torquer_app.h
+** File: generic_torquer_app.h
 **
 ** Purpose:
-**   This file is main header file for the Generic_torquer application.
+**   This is the main header file for the GENERIC_TORQUER application.
 **
 *******************************************************************************/
 #ifndef _GENERIC_TORQUER_APP_H_
 #define _GENERIC_TORQUER_APP_H_
 
 /*
-** Required header files.
+** Include Files
 */
-#include "generic_torquer_app_msg.h"
-#include "generic_torquer_app_events.h"
-#include "generic_torquer_app_version.h"
-#include "generic_torquer_app_platform_cfg.h"
-#include "generic_torquer_app_perfids.h"
-#include "generic_torquer_app_msgids.h"
-
 #include "cfe.h"
-#include "cfe_sb.h"
-#include "cfe_evs.h"
+#include "generic_torquer_device.h"
+#include "generic_torquer_events.h"
+#include "generic_torquer_platform_cfg.h"
+#include "generic_torquer_perfids.h"
+#include "generic_torquer_msg.h"
+#include "generic_torquer_msgids.h"
+#include "generic_torquer_version.h"
 #include "hwlib.h"
 
 
-/***********************************************************************/
-#define GENERIC_TORQUER_PIPE_DEPTH 32 /* Depth of the Command Pipe for Application */
+/*
+** Specified pipe depth - how many messages will be queued in the pipe
+*/
+#define GENERIC_TORQUER_PIPE_DEPTH            32
 
-/************************************************************************
-** Type Definitions
-*************************************************************************/
-#define TRQ_DISABLED              0
-#define TRQ_ENABLED               1
 
 /*
- * Buffer to hold telemetry data prior to sending
- * Defined as a union to ensure proper alignment for a CFE_SB_Msg_t type
- */
-typedef union
-{
-    CFE_SB_Msg_t   MsgHdr;
-    GENERIC_TORQUER_HkTlm_t HkTlm;
-} GENERIC_TORQUER_HkBuffer_t;
+** Enabled and Disabled Definitions
+*/
+#define GENERIC_TORQUER_DEVICE_DISABLED       0
+#define GENERIC_TORQUER_DEVICE_ENABLED        1
+
 
 /*
-** Global Data
+** GENERIC_TORQUER global data structure
+** The cFE convention is to put all global app data in a single struct. 
+** This struct is defined in the `generic_torquer_app.h` file with one global instance 
+** in the `.c` file.
 */
 typedef struct
 {
     /*
-    ** Housekeeping telemetry packet...
+    ** Housekeeping telemetry packet
+    ** Each app defines its own packet which contains its OWN telemetry
     */
-    GENERIC_TORQUER_HkBuffer_t HkBuf;
-
+    GENERIC_TORQUER_Hk_tlm_t   HkTelemetryPkt;   /* GENERIC_TORQUER Housekeeping Telemetry Packet */
+    
     /*
-    ** Operational data (not reported in housekeeping)...
+    ** Operational data  - not reported in housekeeping
     */
-    CFE_SB_PipeId_t CommandPipe;
-    CFE_SB_MsgPtr_t MsgPtr;
+    CFE_SB_MsgPtr_t MsgPtr;             /* Pointer to msg received on software bus */
+    CFE_SB_PipeId_t CmdPipe;            /* Pipe Id for HK command pipe */
     uint32 RunStatus;                   /* App run status for controlling the application state */
-//    uint32 MagTrqMutex;                 /* Mutex between trq and mag */
-
-    GENERIC_TORQUER_Info_t TrqInfo[3];
 
     /*
-    ** Initialization data (not reported in housekeeping)...
-    */
-    char   PipeName[16];
-    uint16 PipeDepth;
-
-    CFE_EVS_BinFilter_t EventFilters[GENERIC_TORQUER_EVENT_COUNTS];
+	** Device data 
+	*/
+	uint32 DeviceID;		            /* Device ID provided by CFS on initialization */
+    GENERIC_TORQUER_Device_tlm_t DevicePkt;      /* Device specific data packet */
 
     /* 
-    ** Device protocols
+    ** Device protocol
+    ** TODO: Make specific to your application
     */ 
-    trq_info_t trqDevice[3];
-    gpio_info_t trqEnable[3];
-
+    uart_info_t Generic_torquerUart;             /* Hardware protocol definition */
 
 } GENERIC_TORQUER_AppData_t;
 
-/****************************************************************************/
+
 /*
-** Function prototypes.
+** Exported Data
+** Extern the global struct in the header for the Unit Test Framework (UTF).
+*/
+extern GENERIC_TORQUER_AppData_t GENERIC_TORQUER_AppData; /* GENERIC_TORQUER App Data */
+
+
+/*
+**
+** Local function prototypes.
 **
 ** Note: Except for the entry point (GENERIC_TORQUER_AppMain), these
 **       functions are not called from any other source module.
 */
 void  GENERIC_TORQUER_AppMain(void);
+int32 GENERIC_TORQUER_AppInit(void);
+void  GENERIC_TORQUER_ProcessCommandPacket(void);
+void  GENERIC_TORQUER_ProcessGroundCommand(void);
+void  GENERIC_TORQUER_ProcessTelemetryRequest(void);
+void  GENERIC_TORQUER_ReportHousekeeping(void);
+void  GENERIC_TORQUER_ReportDeviceTelemetry(void);
+void  GENERIC_TORQUER_ResetCounters(void);
+void  GENERIC_TORQUER_Enable(void);
+void  GENERIC_TORQUER_Disable(void);
+int32 GENERIC_TORQUER_VerifyCmdLength(CFE_SB_MsgPtr_t msg, uint16 expected_length);
 
-void  GENERIC_TORQUER_Enable_Disable(CFE_SB_MsgPtr_t msg);
-void  GENERIC_TORQUER_Direction(CFE_SB_MsgPtr_t msg);
-void  GENERIC_TORQUER_Time_High(CFE_SB_MsgPtr_t msg);
-void  GENERIC_TORQUER_Percent_On(CFE_SB_MsgPtr_t msg);
-
-#endif /* _generic_torquer_app_h_ */
-
-/************************/
-/*  End of File Comment */
-/************************/
+#endif /* _GENERIC_TORQUER_APP_H_ */
