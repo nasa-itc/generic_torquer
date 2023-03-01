@@ -6,10 +6,7 @@ TELEMETRY GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T LITTLE_ENDIAN "GENERIC_TORQUE
   APPEND_ITEM    CCSDS_SUBSECS        16 UINT         "CCSDS Telemetry Secondary Header (subseconds)"
   APPEND_ITEM    COMMANDERRORCOUNT     8 UINT         "CommandErrorCount"
   APPEND_ITEM    COMMANDCOUNT          8 UINT         "CommandCount"
-  APPEND_ITEM    ENABLED               8 UINT         "Whether or not the torquers are enabled"
-  APPEND_ITEM    DIRECTION             8 UINT         "The last successful commanded direction"
-  APPEND_ITEM    TIME_HIGH            32 UINT         "The last successful commanded time_high"
-  APPEND_ITEM    PERCENT_ON            8 UINT         "The last successful commanded percent_on"
+  APPEND_ITEM    INFO_STRUCT          64 UINT         "Last received commands"
   APPEND_ITEM    PAD                  16 UINT         "Because the packed struct it came from has a stride address of 32 and cFS does not serialize"
   
 
