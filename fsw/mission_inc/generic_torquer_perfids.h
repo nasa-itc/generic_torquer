@@ -16,7 +16,6 @@
 ** id conflict with other apps.  Performance IDs are used for cFE performance
 ** metrics.
 */
-#define GENERIC_TORQUER_PERF_ID          500
-#define GENERIC_TORQUER_DEVICE_PERF_ID   501
+#define GENERIC_TORQUER_PERF_ID          505
 
 #endif /* _GENERIC_TORQUER_PERFIDS_H_ */

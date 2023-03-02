@@ -181,7 +181,7 @@ namespace Nos3
             _enabled = GENERIC_TORQUER_SIM_ERROR;
             response = "Generic_torquerHardwareModel::command_callback:  Disabled";
         }
-        else if (command.compare("STOP") == 0) 
+        else if (command.compare(0,4,"STOP") == 0) 
         {
             _keep_running = false;
             response = "Generic_torquerHardwareModel::command_callback:  Stopping";

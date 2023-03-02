@@ -12,7 +12,6 @@
 ** Include Files
 */
 #include "cfe.h"
-#include "generic_torquer_device.h"
 #include "generic_torquer_events.h"
 #include "generic_torquer_platform_cfg.h"
 #include "generic_torquer_perfids.h"
@@ -56,17 +55,10 @@ typedef struct
     CFE_SB_PipeId_t CmdPipe;            /* Pipe Id for HK command pipe */
     uint32 RunStatus;                   /* App run status for controlling the application state */
 
-    /*
-	** Device data 
-	*/
-	uint32 DeviceID;		            /* Device ID provided by CFS on initialization */
-    GENERIC_TORQUER_Device_tlm_t DevicePkt;      /* Device specific data packet */
-
     /* 
     ** Device protocol
-    ** TODO: Make specific to your application
     */ 
-    uart_info_t Generic_torquerUart;             /* Hardware protocol definition */
+    trq_info_t trqDevice[3];             /* Hardware protocol definition */
 
 } GENERIC_TORQUER_AppData_t;
 
@@ -95,6 +87,9 @@ void  GENERIC_TORQUER_ReportDeviceTelemetry(void);
 void  GENERIC_TORQUER_ResetCounters(void);
 void  GENERIC_TORQUER_Enable(void);
 void  GENERIC_TORQUER_Disable(void);
+int32 GENERIC_TORQUER_Config(uint8 num, uint8 percent, uint8 dir);
+int32 GENERIC_TORQUER_PercentOn(CFE_SB_MsgPtr_t msg);
+int32 GENERIC_TORQUER_AllPercentOn(CFE_SB_MsgPtr_t msg);
 int32 GENERIC_TORQUER_VerifyCmdLength(CFE_SB_MsgPtr_t msg, uint16 expected_length);
 
 #endif /* _GENERIC_TORQUER_APP_H_ */

@@ -36,17 +36,12 @@ static CFE_EVS_BinFilter_t  GENERIC_TORQUER_EventFilters[] =
     {GENERIC_TORQUER_DISABLE_INF_EID,        0x0000},
     {GENERIC_TORQUER_DISABLE_ERR_EID,        0x0000},
     {GENERIC_TORQUER_CMD_CONFIG_INF_EID,     0x0000},
-    {GENERIC_TORQUER_CONFIG_INF_EID,         0x0000},
-    {GENERIC_TORQUER_CONFIG_ERR_EID,         0x0000},
+    {GENERIC_TORQUER_CMD_CONFIG_ERR_EID,     0x0000},
+    {GENERIC_TORQUER_CMD_CONFIG_ALL_INF_EID, 0x0000},
+    {GENERIC_TORQUER_CMD_CONFIG_ALL_ERR_EID, 0x0000},
     {GENERIC_TORQUER_DEVICE_TLM_ERR_EID,     0x0000},
     {GENERIC_TORQUER_REQ_HK_ERR_EID,         0x0000},
-    {GENERIC_TORQUER_REQ_DATA_ERR_EID,       0x0000},
-    {GENERIC_TORQUER_UART_INIT_ERR_EID,      0x0000},
-    {GENERIC_TORQUER_UART_CLOSE_ERR_EID,     0x0000},
-    {GENERIC_TORQUER_UART_READ_ERR_EID,      0x0000},
-    {GENERIC_TORQUER_UART_WRITE_ERR_EID,     0x0000},
-    {GENERIC_TORQUER_UART_TIMEOUT_ERR_EID,   0x0000},
-    /* TODO: Add additional event IDs (EID) to the table as created */
+    {GENERIC_TORQUER_CONFIG_ERR_EID,         0x0000}, 
 };
 
 
@@ -155,7 +150,7 @@ int32 GENERIC_TORQUER_AppInit(void)
     /*
     ** Create the Software Bus command pipe 
     */
-    status = CFE_SB_CreatePipe(&GENERIC_TORQUER_AppData.CmdPipe, GENERIC_TORQUER_PIPE_DEPTH, "GENERIC_TORQUER_CMD_PIPE");
+    status = CFE_SB_CreatePipe(&GENERIC_TORQUER_AppData.CmdPipe, GENERIC_TORQUER_PIPE_DEPTH, "GENERIC_TRQ_PIPE");
     if (status != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(GENERIC_TORQUER_PIPE_ERR_EID, CFE_EVS_ERROR,
@@ -187,11 +182,6 @@ int32 GENERIC_TORQUER_AppInit(void)
         return status;
     }
 
-    /*
-    ** TODO: Subscribe to any other messages here
-    */
-
-
     /* 
     ** Initialize the published HK message - this HK message will contain the 
     ** telemetry that has been defined in the GENERIC_TORQUER_HkTelemetryPkt for this app.
@@ -199,19 +189,6 @@ int32 GENERIC_TORQUER_AppInit(void)
     CFE_SB_InitMsg(&GENERIC_TORQUER_AppData.HkTelemetryPkt,
                    GENERIC_TORQUER_HK_TLM_MID,
                    GENERIC_TORQUER_HK_TLM_LNGTH, TRUE);
-
-    /*
-    ** Initialize the device packet message
-    ** This packet is specific to your application
-    */
-    CFE_SB_InitMsg(&GENERIC_TORQUER_AppData.DevicePkt,
-                   GENERIC_TORQUER_DEVICE_TLM_MID,
-                   GENERIC_TORQUER_DEVICE_TLM_LNGTH, TRUE);
-
-    /*
-    ** TODO: Initialize any other messages that this app will publish
-    */
-
 
     /* 
     ** Always reset all counters during application initialization 
@@ -223,9 +200,24 @@ int32 GENERIC_TORQUER_AppInit(void)
     ** Note that counters are excluded as they were reset in the previous code block
     */
     GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_DISABLED;
-    GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceHK.DeviceCounter = 0;
-    GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceHK.DeviceConfig = 0;
-    GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceHK.DeviceStatus = 0;
+
+    /*
+    ** Initialize torquer interfaces
+    */ 
+    GENERIC_TORQUER_AppData.HkTelemetryPkt.TorquerPeriod = GENERIC_TORQUER_CFG_PERIOD;
+    for(uint8_t i = 0; i < 3; i++)
+    {
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqInfo[i].Direction = 0;
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqInfo[i].PercentOn = 0;
+
+        GENERIC_TORQUER_AppData.trqDevice[i].trq_num = i;
+        GENERIC_TORQUER_AppData.trqDevice[i].timer_period_ns = GENERIC_TORQUER_CFG_PERIOD;
+        GENERIC_TORQUER_AppData.trqDevice[i].timerFd = 0;
+        GENERIC_TORQUER_AppData.trqDevice[i].direction_pin_fd = 0;
+        GENERIC_TORQUER_AppData.trqDevice[i].timer_high_ns = 0;
+        GENERIC_TORQUER_AppData.trqDevice[i].positive_direction = FALSE;
+        GENERIC_TORQUER_AppData.trqDevice[i].enabled = FALSE;
+    }
 
     /* 
      ** Send an information event that the app has initialized. 
@@ -282,7 +274,6 @@ void GENERIC_TORQUER_ProcessCommandPacket(void)
 
 /*
 ** Process ground commands
-** TODO: Add additional commands required by the specific component
 */
 void GENERIC_TORQUER_ProcessGroundCommand(void)
 {
@@ -350,16 +341,32 @@ void GENERIC_TORQUER_ProcessGroundCommand(void)
             break;
 
         /*
-        ** TODO: Edit and add more command codes as appropriate for the application
         ** Set Configuration Command
-        ** Note that this is an example of a command that has additional arguments
         */
         case GENERIC_TORQUER_CONFIG_CC:
-            if (GENERIC_TORQUER_VerifyCmdLength(GENERIC_TORQUER_AppData.MsgPtr, sizeof(GENERIC_TORQUER_Config_cmd_t)) == OS_SUCCESS)
+            if (GENERIC_TORQUER_VerifyCmdLength(GENERIC_TORQUER_AppData.MsgPtr, sizeof(GENERIC_TORQUER_Percent_On_cmd_t)) == OS_SUCCESS)
             {
                 CFE_EVS_SendEvent(GENERIC_TORQUER_CMD_CONFIG_INF_EID, CFE_EVS_INFORMATION, "GENERIC_TORQUER: Configuration command received");
-                /* Command device to send HK */
-                status = GENERIC_TORQUER_CommandDevice(GENERIC_TORQUER_AppData.Generic_torquerUart.handle, GENERIC_TORQUER_DEVICE_CFG_CMD, ((GENERIC_TORQUER_Config_cmd_t*) GENERIC_TORQUER_AppData.MsgPtr)->DeviceCfg);
+                status = GENERIC_TORQUER_PercentOn(GENERIC_TORQUER_AppData.MsgPtr);
+                if (status == OS_SUCCESS)
+                {
+                    GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceCount++;
+                }
+                else
+                {
+                    GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount++;
+                }
+            }
+            break;
+
+        /*
+        ** Set All Configuration Command
+        */
+        case GENERIC_TORQUER_CONFIG_ALL_CC:
+            if (GENERIC_TORQUER_VerifyCmdLength(GENERIC_TORQUER_AppData.MsgPtr, sizeof(GENERIC_TORQUER_All_Percent_On_cmd_t)) == OS_SUCCESS)
+            {
+                CFE_EVS_SendEvent(GENERIC_TORQUER_CMD_CONFIG_ALL_INF_EID, CFE_EVS_INFORMATION, "GENERIC_TORQUER: Configuration command received");
+                status = GENERIC_TORQUER_AllPercentOn(GENERIC_TORQUER_AppData.MsgPtr);
                 if (status == OS_SUCCESS)
                 {
                     GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceCount++;
@@ -387,7 +394,6 @@ void GENERIC_TORQUER_ProcessGroundCommand(void)
 
 /*
 ** Process Telemetry Request - Triggered in response to a telemetery request
-** TODO: Add additional telemetry required by the specific component
 */
 void GENERIC_TORQUER_ProcessTelemetryRequest(void)
 {
@@ -402,10 +408,6 @@ void GENERIC_TORQUER_ProcessTelemetryRequest(void)
     {
         case GENERIC_TORQUER_REQ_HK_TLM:
             GENERIC_TORQUER_ReportHousekeeping();
-            break;
-
-        case GENERIC_TORQUER_REQ_DATA_TLM:
-            GENERIC_TORQUER_ReportDeviceTelemetry();
             break;
 
         /*
@@ -427,58 +429,9 @@ void GENERIC_TORQUER_ProcessTelemetryRequest(void)
 */
 void GENERIC_TORQUER_ReportHousekeeping(void)
 {
-    int32 status = OS_SUCCESS;
-
-    /* Check that device is enabled */
-    if (GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled == GENERIC_TORQUER_DEVICE_ENABLED)
-    {
-        status = GENERIC_TORQUER_RequestHK(GENERIC_TORQUER_AppData.Generic_torquerUart.handle, (GENERIC_TORQUER_Device_HK_tlm_t*) &GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceHK);
-        if (status == OS_SUCCESS)
-        {
-            GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceCount++;
-        }
-        else
-        {
-            GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount++;
-            CFE_EVS_SendEvent(GENERIC_TORQUER_REQ_HK_ERR_EID, CFE_EVS_ERROR, 
-                    "GENERIC_TORQUER: Request device HK reported error %d", status);
-        }
-    }
-    /* Intentionally do not report errors if disabled */
-
     /* Time stamp and publish housekeeping telemetry */
     CFE_SB_TimeStampMsg((CFE_SB_Msg_t *) &GENERIC_TORQUER_AppData.HkTelemetryPkt);
     CFE_SB_SendMsg((CFE_SB_Msg_t *) &GENERIC_TORQUER_AppData.HkTelemetryPkt);
-    return;
-}
-
-
-/*
-** Collect and Report Device Telemetry
-*/
-void GENERIC_TORQUER_ReportDeviceTelemetry(void)
-{
-    int32 status = OS_SUCCESS;
-
-    /* Check that device is enabled */
-    if (GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled == GENERIC_TORQUER_DEVICE_ENABLED)
-    {
-        status = GENERIC_TORQUER_RequestData(GENERIC_TORQUER_AppData.Generic_torquerUart.handle, (GENERIC_TORQUER_Device_Data_tlm_t*) &GENERIC_TORQUER_AppData.DevicePkt.Generic_torquer);
-        if (status == OS_SUCCESS)
-        {
-            GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceCount++;
-            /* Time stamp and publish data telemetry */
-            CFE_SB_TimeStampMsg((CFE_SB_Msg_t *) &GENERIC_TORQUER_AppData.DevicePkt);
-            CFE_SB_SendMsg((CFE_SB_Msg_t *) &GENERIC_TORQUER_AppData.DevicePkt);
-        }
-        else
-        {
-            GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount++;
-            CFE_EVS_SendEvent(GENERIC_TORQUER_REQ_DATA_ERR_EID, CFE_EVS_ERROR, 
-                    "GENERIC_TORQUER: Request device data reported error %d", status);
-        }
-    }
-    /* Intentionally do not report errors if disabled */
     return;
 }
 
@@ -498,7 +451,6 @@ void GENERIC_TORQUER_ResetCounters(void)
 
 /*
 ** Enable Component
-** TODO: Edit for your specific component implementation
 */
 void GENERIC_TORQUER_Enable(void)
 {
@@ -509,17 +461,15 @@ void GENERIC_TORQUER_Enable(void)
     {
         /*
         ** Initialize hardware interface data
-        ** TODO: Make specific to your application depending on protocol in use
-        ** Note that other components provide examples for the different protocols available
-        */ 
-        GENERIC_TORQUER_AppData.Generic_torquerUart.deviceString = GENERIC_TORQUER_CFG_STRING;
-        GENERIC_TORQUER_AppData.Generic_torquerUart.handle = GENERIC_TORQUER_CFG_HANDLE;
-        GENERIC_TORQUER_AppData.Generic_torquerUart.isOpen = PORT_CLOSED;
-        GENERIC_TORQUER_AppData.Generic_torquerUart.baud = GENERIC_TORQUER_CFG_BAUDRATE_HZ;
-        GENERIC_TORQUER_AppData.Generic_torquerUart.access_option = uart_access_flag_RDWR;
+        */
+        for(uint8_t i; i < 3; i++)
+        {
+            status += trq_init(&GENERIC_TORQUER_AppData.trqDevice[i]);
+            status += trq_command(&GENERIC_TORQUER_AppData.trqDevice[i], 0, 0);
+            GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqInfo[i].Direction = 0;
+            GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqInfo[i].PercentOn = 0;
+        }
 
-        /* Open device specific protocols */
-        status = uart_init_port(&GENERIC_TORQUER_AppData.Generic_torquerUart);
         if (status == OS_SUCCESS)
         {
             GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceCount++;
@@ -529,7 +479,7 @@ void GENERIC_TORQUER_Enable(void)
         else
         {
             GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount++;
-            CFE_EVS_SendEvent(GENERIC_TORQUER_UART_INIT_ERR_EID, CFE_EVS_ERROR, "GENERIC_TORQUER: UART port initialization error %d", status);
+            CFE_EVS_SendEvent(GENERIC_TORQUER_INIT_ERR_EID, CFE_EVS_ERROR, "GENERIC_TORQUER: Torquer initialization error %d", status);
         }
     }
     else
@@ -543,7 +493,6 @@ void GENERIC_TORQUER_Enable(void)
 
 /*
 ** Disable Component
-** TODO: Edit for your specific component implementation
 */
 void GENERIC_TORQUER_Disable(void)
 {
@@ -552,19 +501,17 @@ void GENERIC_TORQUER_Disable(void)
     /* Check that device is enabled */
     if (GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled == GENERIC_TORQUER_DEVICE_ENABLED)
     {
-        /* Open device specific protocols */
-        status = uart_close_port(GENERIC_TORQUER_AppData.Generic_torquerUart.handle);
-        if (status == OS_SUCCESS)
+        for(uint8_t i; i < 3; i++)
         {
-            GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceCount++;
-            GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_DISABLED;
-            CFE_EVS_SendEvent(GENERIC_TORQUER_DISABLE_INF_EID, CFE_EVS_INFORMATION, "GENERIC_TORQUER: Device disabled");
+            /* Set to zero  */
+            trq_command(&GENERIC_TORQUER_AppData.trqDevice[i], 0, 0);
+            GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqInfo[i].Direction = 0;
+            GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqInfo[i].PercentOn = 0;
+            trq_close(&GENERIC_TORQUER_AppData.trqDevice[i]);
         }
-        else
-        {
-            GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount++;
-            CFE_EVS_SendEvent(GENERIC_TORQUER_UART_CLOSE_ERR_EID, CFE_EVS_ERROR, "GENERIC_TORQUER: UART port close error %d", status);
-        }
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceCount++;
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_DISABLED;
+        CFE_EVS_SendEvent(GENERIC_TORQUER_DISABLE_INF_EID, CFE_EVS_INFORMATION, "GENERIC_TORQUER: Device disabled");
     }
     else
     {
@@ -572,6 +519,74 @@ void GENERIC_TORQUER_Disable(void)
         CFE_EVS_SendEvent(GENERIC_TORQUER_DISABLE_ERR_EID, CFE_EVS_ERROR, "GENERIC_TORQUER: Device disable failed, already disabled");
     }
     return;
+}
+
+/*
+** Configure torquer using hwlib
+*/
+int32 GENERIC_TORQUER_Config(uint8 num, uint8 percent, uint8 dir)
+{
+    int32 status = OS_SUCCESS;
+
+    status = trq_command(&GENERIC_TORQUER_AppData.trqDevice[num], percent, dir);        
+    if (status == OS_SUCCESS)
+    {
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqInfo[num].PercentOn = percent;
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqInfo[num].Direction = dir;
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceCount++;
+    }
+    else
+    {
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount++;
+        CFE_EVS_SendEvent(GENERIC_TORQUER_CONFIG_ERR_EID, CFE_EVS_INFORMATION, "GENERIC_TORQUER: Failed to configure device %d", num);    
+    }
+    return status;
+}
+
+
+/*
+** Configure a specific torquer
+*/
+int32 GENERIC_TORQUER_PercentOn(CFE_SB_MsgPtr_t msg)
+{
+    int32 status = OS_SUCCESS;
+    GENERIC_TORQUER_Percent_On_cmd_t* percent_cmd_ptr = (GENERIC_TORQUER_Percent_On_cmd_t*) msg;
+
+    /* Check that device is enabled */
+    if (GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled == GENERIC_TORQUER_DEVICE_ENABLED)
+    {
+        GENERIC_TORQUER_Config(percent_cmd_ptr->TrqNum, percent_cmd_ptr->PercentOn, percent_cmd_ptr->Direction);
+    }
+    else
+    {
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount++;
+        CFE_EVS_SendEvent(GENERIC_TORQUER_CMD_CONFIG_ERR_EID, CFE_EVS_ERROR, "GENERIC_TORQUER: Configure all devices failed, disabled");
+    }
+    return status;
+}
+
+
+/*
+** Configure all torquers at once
+*/
+int32 GENERIC_TORQUER_AllPercentOn(CFE_SB_MsgPtr_t msg)
+{
+    int32 status = OS_SUCCESS;
+    GENERIC_TORQUER_All_Percent_On_cmd_t* all_percent_cmd_ptr = (GENERIC_TORQUER_All_Percent_On_cmd_t*) msg;
+
+    /* Check that device is enabled */
+    if (GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled == GENERIC_TORQUER_DEVICE_ENABLED)
+    {
+        GENERIC_TORQUER_Config(0, all_percent_cmd_ptr->PercentOn_0, all_percent_cmd_ptr->Direction_0);
+        GENERIC_TORQUER_Config(1, all_percent_cmd_ptr->PercentOn_1, all_percent_cmd_ptr->Direction_1);
+        GENERIC_TORQUER_Config(2, all_percent_cmd_ptr->PercentOn_2, all_percent_cmd_ptr->Direction_2);
+    }
+    else
+    {
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount++;
+        CFE_EVS_SendEvent(GENERIC_TORQUER_CMD_CONFIG_ALL_ERR_EID, CFE_EVS_ERROR, "GENERIC_TORQUER: Device disable failed, already disabled");
+    }
+    return status;
 }
 
 

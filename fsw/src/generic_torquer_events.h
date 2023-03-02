@@ -32,21 +32,19 @@
 
 /* Device specific command event IDs */
 #define GENERIC_TORQUER_CMD_CONFIG_INF_EID        20
-#define GENERIC_TORQUER_CONFIG_INF_EID            21
-#define GENERIC_TORQUER_CONFIG_ERR_EID            22
+#define GENERIC_TORQUER_CMD_CONFIG_ERR_EID        21
+#define GENERIC_TORQUER_CMD_CONFIG_ALL_INF_EID    22
+#define GENERIC_TORQUER_CMD_CONFIG_ALL_ERR_EID    23
 
 /* Standard telemetry event IDs */
 #define GENERIC_TORQUER_DEVICE_TLM_ERR_EID        30
 #define GENERIC_TORQUER_REQ_HK_ERR_EID            31
 
 /* Device specific telemetry event IDs */
-#define GENERIC_TORQUER_REQ_DATA_ERR_EID          32
+/* None */
 
 /* Hardware protocol event IDs */
-#define GENERIC_TORQUER_UART_INIT_ERR_EID         40
-#define GENERIC_TORQUER_UART_CLOSE_ERR_EID        41
-#define GENERIC_TORQUER_UART_READ_ERR_EID         42
-#define GENERIC_TORQUER_UART_WRITE_ERR_EID        43
-#define GENERIC_TORQUER_UART_TIMEOUT_ERR_EID      44
+#define GENERIC_TORQUER_INIT_ERR_EID              40
+#define GENERIC_TORQUER_CONFIG_ERR_EID            41
 
 #endif /* _GENERIC_TORQUER_EVENTS_H_ */

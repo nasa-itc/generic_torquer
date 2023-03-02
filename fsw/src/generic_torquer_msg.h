@@ -10,26 +10,23 @@
 #define _GENERIC_TORQUER_MSG_H_
 
 #include "cfe.h"
-#include "generic_torquer_device.h"
 
 
 /*
 ** Ground Command Codes
-** TODO: Add additional commands required by the specific component
 */
 #define GENERIC_TORQUER_NOOP_CC                 0
 #define GENERIC_TORQUER_RESET_COUNTERS_CC       1
 #define GENERIC_TORQUER_ENABLE_CC               2
 #define GENERIC_TORQUER_DISABLE_CC              3
 #define GENERIC_TORQUER_CONFIG_CC               4
+#define GENERIC_TORQUER_CONFIG_ALL_CC           5
 
 
 /* 
 ** Telemetry Request Command Codes
-** TODO: Add additional commands required by the specific component
 */
 #define GENERIC_TORQUER_REQ_HK_TLM              0
-#define GENERIC_TORQUER_REQ_DATA_TLM            1
 
 
 /*
@@ -44,14 +41,34 @@ typedef struct
 
 
 /*
-** GENERIC_TORQUER write configuration command
+** Percent on command
 */
 typedef struct
 {
-    uint8    CmdHeader[CFE_SB_CMD_HDR_SIZE];
-    uint32   DeviceCfg;
+    uint8   CmdHeader[CFE_SB_CMD_HDR_SIZE];
+    uint8   TrqNum;
+    uint8   Direction;
+    uint8   PercentOn;
 
-} GENERIC_TORQUER_Config_cmd_t;
+} OS_PACK GENERIC_TORQUER_Percent_On_cmd_t;
+#define GENERIC_TORQUER_PERCENT_ON_CMD_LEN sizeof(GENERIC_TORQUER_Percent_On_cmd_t)
+
+
+/*
+** All percent on command
+*/
+typedef struct
+{
+    uint8   CmdHeader[CFE_SB_CMD_HDR_SIZE];
+    uint8   Direction_0;
+    uint8   PercentOn_0;
+    uint8   Direction_1;
+    uint8   PercentOn_1;
+    uint8   Direction_2;
+    uint8   PercentOn_2;
+
+} OS_PACK GENERIC_TORQUER_All_Percent_On_cmd_t;
+#define GENERIC_TORQUER_ALL_PERCENT_ON_CMD_LEN sizeof(GENERIC_TORQUER_All_Percent_On_cmd_t)
 
 
 /*
@@ -59,9 +76,9 @@ typedef struct
 */
 typedef struct 
 {
-    uint8   TlmHeader[CFE_SB_TLM_HDR_SIZE];
-    GENERIC_TORQUER_Device_Data_tlm_t Generic_torquer;
-
+    uint8   Direction;
+    uint8   PercentOn;
+    
 } OS_PACK GENERIC_TORQUER_Device_tlm_t;
 #define GENERIC_TORQUER_DEVICE_TLM_LNGTH sizeof ( GENERIC_TORQUER_Device_tlm_t )
 
@@ -76,12 +93,9 @@ typedef struct
     uint8   CommandCount;
     uint8   DeviceErrorCount;
     uint8   DeviceCount;
-  
-    /*
-    ** TODO: Edit and add specific telemetry values to this struct
-    */
     uint8   DeviceEnabled;
-    GENERIC_TORQUER_Device_HK_tlm_t DeviceHK;
+    uint32  TorquerPeriod;
+    GENERIC_TORQUER_Device_tlm_t TrqInfo[3];
 
 } OS_PACK GENERIC_TORQUER_Hk_tlm_t;
 #define GENERIC_TORQUER_HK_TLM_LNGTH sizeof ( GENERIC_TORQUER_Hk_tlm_t )
