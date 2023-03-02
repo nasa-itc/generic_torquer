@@ -49,13 +49,10 @@ namespace Nos3
         }
 
         /* Initialize socket information */
-        sockfd = -1; 
         port_num = 14242;
-        ip_address = NULL;
-        address_family = AF_INET;
 
         /* Create the socket */
-        sockfd = socket(AF_INET, AF_INET, IPPROTO_UDP);
+        sockfd = socket(AF_INET, SOCK_DGRAM, 0);
         if (sockfd == -1) {
             sim_logger->fatal("Generic_torquerHardwareModel::Generic_torquerHardwareModel:  Error creating MTB socket");
             throw new std::runtime_error("Generic_torquerHardwareModel::Generic_torquerHardwareModel:  Error creating MTB socket");
@@ -65,9 +62,9 @@ namespace Nos3
            Prepare the sockaddr_in structure
         */
         struct sockaddr_in sockaddr;
-        sockaddr.sin_family = address_family;
+        sockaddr.sin_family = AF_INET;
         sockaddr.sin_addr.s_addr = INADDR_ANY; /* auto-fill with host ip */
-        sockaddr.sin_port = htons(port_num);       
+        sockaddr.sin_port = htons(port_num);     
 
         /* Bind the socket */
         int ret = bind(sockfd, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
@@ -120,8 +117,8 @@ namespace Nos3
 
             /* Read trq command string from the socket */
             c = sizeof(struct sockaddr_in);
-            remote_sockaddr.sin_family = address_family;
-            remote_sockaddr.sin_port = port_num;
+            remote_sockaddr.sin_family = AF_INET;
+            remote_sockaddr.sin_port = htons(port_num);
             remote_sockaddr.sin_addr.s_addr = INADDR_ANY;
             retVal = recvfrom(sockfd, socket_recv_buf, sizeof(socket_recv_buf), 0, (struct sockaddr *)&remote_sockaddr, (socklen_t*)&c);
             bytes_recvd = retVal;

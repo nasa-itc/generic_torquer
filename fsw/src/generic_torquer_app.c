@@ -113,6 +113,7 @@ void GENERIC_TORQUER_AppMain(void)
     ** Disable component, which cleans up the interface, upon exit
     */
     GENERIC_TORQUER_Disable();
+    trq_close(&GENERIC_TORQUER_AppData.trqDevice[0]); /* TODO: Move this into disable when close issue resolved in HWLIB */
 
     /*
     ** Performance log exit stamp
@@ -212,11 +213,13 @@ int32 GENERIC_TORQUER_AppInit(void)
 
         GENERIC_TORQUER_AppData.trqDevice[i].trq_num = i;
         GENERIC_TORQUER_AppData.trqDevice[i].timer_period_ns = GENERIC_TORQUER_CFG_PERIOD;
-        GENERIC_TORQUER_AppData.trqDevice[i].timerFd = 0;
+        GENERIC_TORQUER_AppData.trqDevice[i].timerfd = 0;
         GENERIC_TORQUER_AppData.trqDevice[i].direction_pin_fd = 0;
         GENERIC_TORQUER_AppData.trqDevice[i].timer_high_ns = 0;
         GENERIC_TORQUER_AppData.trqDevice[i].positive_direction = FALSE;
         GENERIC_TORQUER_AppData.trqDevice[i].enabled = FALSE;
+
+        trq_init(&GENERIC_TORQUER_AppData.trqDevice[i]);  /* TODO: Move this into enable once HWLIB issue resolved */
     }
 
     /* 
@@ -462,9 +465,8 @@ void GENERIC_TORQUER_Enable(void)
         /*
         ** Initialize hardware interface data
         */
-        for(uint8_t i; i < 3; i++)
+        for(uint8_t i = 0; i < 3; i++)
         {
-            status += trq_init(&GENERIC_TORQUER_AppData.trqDevice[i]);
             status += trq_command(&GENERIC_TORQUER_AppData.trqDevice[i], 0, 0);
             GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqInfo[i].Direction = 0;
             GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqInfo[i].PercentOn = 0;
@@ -501,14 +503,13 @@ void GENERIC_TORQUER_Disable(void)
     /* Check that device is enabled */
     if (GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled == GENERIC_TORQUER_DEVICE_ENABLED)
     {
-        for(uint8_t i; i < 3; i++)
+        for(uint8_t i = 0; i < 3; i++)
         {
             /* Set to zero  */
             trq_command(&GENERIC_TORQUER_AppData.trqDevice[i], 0, 0);
             GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqInfo[i].Direction = 0;
             GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqInfo[i].PercentOn = 0;
-            trq_close(&GENERIC_TORQUER_AppData.trqDevice[i]);
-        }
+        }        
         GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceCount++;
         GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_DISABLED;
         CFE_EVS_SendEvent(GENERIC_TORQUER_DISABLE_INF_EID, CFE_EVS_INFORMATION, "GENERIC_TORQUER: Device disabled");
