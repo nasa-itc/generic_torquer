@@ -349,7 +349,7 @@ void GENERIC_TORQUER_ProcessGroundCommand(void)
         case GENERIC_TORQUER_CONFIG_CC:
             if (GENERIC_TORQUER_VerifyCmdLength(GENERIC_TORQUER_AppData.MsgPtr, sizeof(GENERIC_TORQUER_Percent_On_cmd_t)) == OS_SUCCESS)
             {
-                CFE_EVS_SendEvent(GENERIC_TORQUER_CMD_CONFIG_INF_EID, CFE_EVS_INFORMATION, "GENERIC_TORQUER: Configuration command received");
+                //CFE_EVS_SendEvent(GENERIC_TORQUER_CMD_CONFIG_INF_EID, CFE_EVS_INFORMATION, "GENERIC_TORQUER: Configuration command received");
                 status = GENERIC_TORQUER_PercentOn(GENERIC_TORQUER_AppData.MsgPtr);
                 if (status == OS_SUCCESS)
                 {
@@ -368,7 +368,7 @@ void GENERIC_TORQUER_ProcessGroundCommand(void)
         case GENERIC_TORQUER_CONFIG_ALL_CC:
             if (GENERIC_TORQUER_VerifyCmdLength(GENERIC_TORQUER_AppData.MsgPtr, sizeof(GENERIC_TORQUER_All_Percent_On_cmd_t)) == OS_SUCCESS)
             {
-                CFE_EVS_SendEvent(GENERIC_TORQUER_CMD_CONFIG_ALL_INF_EID, CFE_EVS_INFORMATION, "GENERIC_TORQUER: Configuration command received");
+                //CFE_EVS_SendEvent(GENERIC_TORQUER_CMD_CONFIG_ALL_INF_EID, CFE_EVS_INFORMATION, "GENERIC_TORQUER: Configuration command received");
                 status = GENERIC_TORQUER_AllPercentOn(GENERIC_TORQUER_AppData.MsgPtr);
                 if (status == OS_SUCCESS)
                 {
@@ -558,11 +558,6 @@ int32 GENERIC_TORQUER_PercentOn(CFE_SB_MsgPtr_t msg)
     {
         GENERIC_TORQUER_Config(percent_cmd_ptr->TrqNum, percent_cmd_ptr->PercentOn, percent_cmd_ptr->Direction);
     }
-    else
-    {
-        GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount++;
-        CFE_EVS_SendEvent(GENERIC_TORQUER_CMD_CONFIG_ERR_EID, CFE_EVS_ERROR, "GENERIC_TORQUER: Configure all devices failed, disabled");
-    }
     return status;
 }
 
@@ -581,11 +576,6 @@ int32 GENERIC_TORQUER_AllPercentOn(CFE_SB_MsgPtr_t msg)
         GENERIC_TORQUER_Config(0, all_percent_cmd_ptr->PercentOn_0, all_percent_cmd_ptr->Direction_0);
         GENERIC_TORQUER_Config(1, all_percent_cmd_ptr->PercentOn_1, all_percent_cmd_ptr->Direction_1);
         GENERIC_TORQUER_Config(2, all_percent_cmd_ptr->PercentOn_2, all_percent_cmd_ptr->Direction_2);
-    }
-    else
-    {
-        GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount++;
-        CFE_EVS_SendEvent(GENERIC_TORQUER_CMD_CONFIG_ALL_ERR_EID, CFE_EVS_ERROR, "GENERIC_TORQUER: Device disable failed, already disabled");
     }
     return status;
 }
