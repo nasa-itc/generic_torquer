@@ -24,7 +24,7 @@ namespace Nos3
     private:
         /* Disallow these */
         ~Generic_torquer42DataProvider(void) {};
-        Generic_torquer42DataProvider& operator=(const Generic_torquer42DataProvider&) {};
+        Generic_torquer42DataProvider& operator=(const Generic_torquer42DataProvider&) {return *this;};
 
         int16_t _sc;  /* Which spacecraft number to parse out of 42 data */
     };

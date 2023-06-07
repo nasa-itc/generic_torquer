@@ -99,10 +99,6 @@ namespace Nos3
     {
         char socket_recv_buf[512];            
         int retVal;
-        size_t bytes_recvd = 0;
-        size_t bytes_sent = 0;
-        uint8_t sleep_pin_value;
-        uint8_t reset_pin_value[3];
         int trq_num;
         double trq_percent_high_dir;
 
@@ -112,7 +108,6 @@ namespace Nos3
             retVal = -1;
 
             int c;
-            int ip_str_len;
             struct sockaddr_in remote_sockaddr;            
 
             /* Read trq command string from the socket */
@@ -121,7 +116,6 @@ namespace Nos3
             remote_sockaddr.sin_port = htons(port_num);
             remote_sockaddr.sin_addr.s_addr = INADDR_ANY;
             retVal = recvfrom(sockfd, socket_recv_buf, sizeof(socket_recv_buf), 0, (struct sockaddr *)&remote_sockaddr, (socklen_t*)&c);
-            bytes_recvd = retVal;
 
             /* Forward trq command string to 42 */
             if (retVal != -1) 
