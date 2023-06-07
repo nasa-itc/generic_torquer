@@ -27,8 +27,3 @@ set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH}:$ORIGIN/../lib") # Pick up .so i
 add_library(generic_torquer_sim SHARED ${generic_torquer_sim_src} ${generic_torquer_sim_inc})
 target_link_libraries(generic_torquer_sim ${generic_torquer_sim_libs})
 install(TARGETS generic_torquer_sim LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
-
-add_executable(nos3-generic-torquer-simulator src/generic_torquer_sim.cpp)
-target_link_libraries(nos3-generic-torquer-simulator generic_torquer_sim ${generic_torquer_sim_libs})
-install(TARGETS nos3-generic-torquer-simulator RUNTIME DESTINATION bin)
-install(TARGETS generic_torquer_sim LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
