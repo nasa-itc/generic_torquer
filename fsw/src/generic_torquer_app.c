@@ -17,34 +17,6 @@
 */
 GENERIC_TORQUER_AppData_t GENERIC_TORQUER_AppData;
 
-static CFE_EVS_BinFilter_t  GENERIC_TORQUER_EventFilters[] =
-{   /* Event ID    mask */
-    {GENERIC_TORQUER_RESERVED_EID,           0x0000},
-    {GENERIC_TORQUER_STARTUP_INF_EID,        0x0000},
-    {GENERIC_TORQUER_LEN_ERR_EID,            0x0000},
-    {GENERIC_TORQUER_PIPE_ERR_EID,           0x0000},
-    {GENERIC_TORQUER_SUB_CMD_ERR_EID,        0x0000},
-    {GENERIC_TORQUER_SUB_REQ_HK_ERR_EID,     0x0000},
-    {GENERIC_TORQUER_PROCESS_CMD_ERR_EID,    0x0000},
-    {GENERIC_TORQUER_CMD_ERR_EID,            0x0000},
-    {GENERIC_TORQUER_CMD_NOOP_INF_EID,       0x0000},
-    {GENERIC_TORQUER_CMD_RESET_INF_EID,      0x0000},
-    {GENERIC_TORQUER_CMD_ENABLE_INF_EID,     0x0000},
-    {GENERIC_TORQUER_ENABLE_INF_EID,         0x0000},
-    {GENERIC_TORQUER_ENABLE_ERR_EID,         0x0000},
-    {GENERIC_TORQUER_CMD_DISABLE_INF_EID,    0x0000},
-    {GENERIC_TORQUER_DISABLE_INF_EID,        0x0000},
-    {GENERIC_TORQUER_DISABLE_ERR_EID,        0x0000},
-    {GENERIC_TORQUER_CMD_CONFIG_INF_EID,     0x0000},
-    {GENERIC_TORQUER_CMD_CONFIG_ERR_EID,     0x0000},
-    {GENERIC_TORQUER_CMD_CONFIG_ALL_INF_EID, 0x0000},
-    {GENERIC_TORQUER_CMD_CONFIG_ALL_ERR_EID, 0x0000},
-    {GENERIC_TORQUER_DEVICE_TLM_ERR_EID,     0x0000},
-    {GENERIC_TORQUER_REQ_HK_ERR_EID,         0x0000},
-    {GENERIC_TORQUER_CONFIG_ERR_EID,         0x0000}, 
-};
-
-
 /*
 ** Application entry point and main process loop
 */
@@ -139,9 +111,7 @@ int32 GENERIC_TORQUER_AppInit(void)
     /*
     ** Register the events
     */ 
-    status = CFE_EVS_Register(GENERIC_TORQUER_EventFilters,
-                              sizeof(GENERIC_TORQUER_EventFilters)/sizeof(CFE_EVS_BinFilter_t),
-                              CFE_EVS_BINARY_FILTER);    /* as default, no filters are used */
+    status = CFE_EVS_Register(NULL, 0, CFE_EVS_BINARY_FILTER);    /* as default, no filters are used */
     if (status != CFE_SUCCESS)
     {
         CFE_ES_WriteToSysLog("GENERIC_TORQUER: Error registering for event services: 0x%08X\n", (unsigned int) status);
