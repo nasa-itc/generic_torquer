@@ -3,7 +3,7 @@ RX                                      ! IPC Mode (OFF,TX,RX,TXRX,ACS,WRITEFILE
 1                                       ! AC.ID for ACS mode
 "Torquer.Rx"                            ! File name for WRITE or READ
 SERVER                                  ! Socket Role (SERVER,CLIENT,GMSEC_CLIENT)
-localhost      4279                     ! Server Host Name, Port 
+0.0.0.0        4279                     ! Server Host Name, Port 
 FALSE                                   ! Allow Blocking (i.e. wait on RX)
 FALSE                                   ! Echo to stdout
 1                                       ! Number of TX prefixes

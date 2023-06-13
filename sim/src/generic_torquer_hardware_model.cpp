@@ -9,7 +9,8 @@ namespace Nos3
     Generic_torquerHardwareModel::Generic_torquerHardwareModel(const boost::property_tree::ptree& config) : SimIHardwareModel(config), _enabled(0)
     {
         /* Get the NOS engine connection string */
-        std::string connection_string = config.get("common.nos-connection-string", "tcp://127.0.0.1:12001"); 
+//        std::string connection_string = config.get("common.nos-connection-string", "tcp://127.0.0.1:12001"); 
+        std::string connection_string = config.get("common.nos-connection-string", "tcp://nos_engine_server:12001"); 
         sim_logger->info("Generic_torquerHardwareModel::Generic_torquerHardwareModel:  NOS Engine connection string: %s.", connection_string.c_str());
 
         /* Get a data provider */
