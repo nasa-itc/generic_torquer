@@ -35,7 +35,7 @@
 typedef struct
 {
     /* Every command requires a header used to identify it */
-    uint8    CmdHeader[CFE_SB_CMD_HDR_SIZE];
+    CFE_MSG_CommandHeader_t CmdHeader;
 
 } GENERIC_TORQUER_NoArgs_cmd_t;
 
@@ -45,12 +45,12 @@ typedef struct
 */
 typedef struct
 {
-    uint8   CmdHeader[CFE_SB_CMD_HDR_SIZE];
+    CFE_MSG_CommandHeader_t CmdHeader;
     uint8   TrqNum;
     uint8   Direction;
     uint8   PercentOn;
 
-} OS_PACK GENERIC_TORQUER_Percent_On_cmd_t;
+} __attribute__((packed)) GENERIC_TORQUER_Percent_On_cmd_t;
 #define GENERIC_TORQUER_PERCENT_ON_CMD_LEN sizeof(GENERIC_TORQUER_Percent_On_cmd_t)
 
 
@@ -59,7 +59,7 @@ typedef struct
 */
 typedef struct
 {
-    uint8   CmdHeader[CFE_SB_CMD_HDR_SIZE];
+    CFE_MSG_CommandHeader_t CmdHeader;
     uint8   Direction_0;
     uint8   PercentOn_0;
     uint8   Direction_1;
@@ -67,7 +67,7 @@ typedef struct
     uint8   Direction_2;
     uint8   PercentOn_2;
 
-} OS_PACK GENERIC_TORQUER_All_Percent_On_cmd_t;
+} __attribute__((packed)) GENERIC_TORQUER_All_Percent_On_cmd_t;
 #define GENERIC_TORQUER_ALL_PERCENT_ON_CMD_LEN sizeof(GENERIC_TORQUER_All_Percent_On_cmd_t)
 
 
@@ -79,7 +79,7 @@ typedef struct
     uint8   Direction;
     uint8   PercentOn;
     
-} OS_PACK GENERIC_TORQUER_Device_tlm_t;
+} __attribute__((packed)) GENERIC_TORQUER_Device_tlm_t;
 #define GENERIC_TORQUER_DEVICE_TLM_LNGTH sizeof ( GENERIC_TORQUER_Device_tlm_t )
 
 
@@ -88,7 +88,7 @@ typedef struct
 */
 typedef struct 
 {
-    uint8   TlmHeader[CFE_SB_TLM_HDR_SIZE];
+    CFE_MSG_TelemetryHeader_t TlmHeader;
     uint8   CommandErrorCount;
     uint8   CommandCount;
     uint8   DeviceErrorCount;
@@ -97,7 +97,7 @@ typedef struct
     uint32  TorquerPeriod;
     GENERIC_TORQUER_Device_tlm_t TrqInfo[3];
 
-} OS_PACK GENERIC_TORQUER_Hk_tlm_t;
+} __attribute__((packed)) GENERIC_TORQUER_Hk_tlm_t;
 #define GENERIC_TORQUER_HK_TLM_LNGTH sizeof ( GENERIC_TORQUER_Hk_tlm_t )
 
 #endif /* _GENERIC_TORQUER_MSG_H_ */
