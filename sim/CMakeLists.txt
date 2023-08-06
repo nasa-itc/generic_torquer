@@ -1,7 +1,7 @@
 project(generic_torquer_sim)
 
 find_package(ITC_Common REQUIRED QUIET COMPONENTS itc_logger)
-find_package(NOSENGINE REQUIRED QUIET COMPONENTS common transport client uart)
+find_package(NOSENGINE REQUIRED QUIET COMPONENTS common transport client)
 
 include_directories(inc
                     ${sim_common_SOURCE_DIR}/inc
@@ -11,7 +11,6 @@ include_directories(inc
 set(generic_torquer_sim_src
     src/generic_torquer_hardware_model.cpp
     src/generic_torquer_42_data_provider.cpp
-    src/generic_torquer_data_point.cpp
 )
 
 # For Code::Blocks and other IDEs
@@ -27,9 +26,4 @@ set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH}:$ORIGIN/../lib") # Pick up .so i
 
 add_library(generic_torquer_sim SHARED ${generic_torquer_sim_src} ${generic_torquer_sim_inc})
 target_link_libraries(generic_torquer_sim ${generic_torquer_sim_libs})
-install(TARGETS generic_torquer_sim LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
-
-add_executable(nos3-generic_torquer-simulator src/generic_torquer_sim.cpp)
-target_link_libraries(nos3-generic_torquer-simulator generic_torquer_sim ${generic_torquer_sim_libs})
-install(TARGETS nos3-generic_torquer-simulator RUNTIME DESTINATION bin)
 install(TARGETS generic_torquer_sim LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)

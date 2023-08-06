@@ -1,461 +1,585 @@
 /*******************************************************************************
-** File: 
-**  generic_torquer_app.c
+** File: generic_torquer_app.c
 **
 ** Purpose:
-**   This file contains the source code for the Generic_torquer App.
+**   This file contains the source code for the GENERIC_TORQUER application.
 **
 *******************************************************************************/
 
 /*
-** Include Files:
+** Include Files
 */
-
-//#include "string.h"
-//#include "generic_torquer_app_events.h"
-
 #include "generic_torquer_app.h"
-#include "generic_torquer_app_version.h"
-#include "generic_torquer_app_msgids.h"
-#include "generic_torquer_app_perfids.h"
-#include "generic_torquer_device.h"
-#include "cfe_error.h"
+
 
 /*
-** global data
+** Global Data
 */
 GENERIC_TORQUER_AppData_t GENERIC_TORQUER_AppData;
 
-// Forward declarations
-static int32 GENERIC_TORQUER_AppInit(void);
-static void  GENERIC_TORQUER_ProcessCommandPacket(CFE_SB_MsgPtr_t Msg);
-static void  GENERIC_TORQUER_ProcessGroundCommand(CFE_SB_MsgPtr_t Msg);
-static int32 GENERIC_TORQUER_ReportHousekeeping(const CFE_SB_CmdHdr_t *Msg);
-static int32 GENERIC_TORQUER_ResetCounters(const GENERIC_TORQUER_ResetCounters_t *Msg);
-static int32 GENERIC_TORQUER_Noop(const GENERIC_TORQUER_Noop_t *Msg);
-static bool GENERIC_TORQUER_VerifyCmdLength(CFE_SB_MsgPtr_t Msg, uint16 ExpectedLength);
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *  * *  * * * * **/
-/*                                                                            */
-/* Name:  GENERIC_TORQUER_AppMain()                                                    */
-/* Purpose:                                                                   */
-/*        Application entry point and main process loop                       */
-/*                                                                            */
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *  * *  * * * * **/
-void GENERIC_TORQUER_AppMain(void)
+/*
+** Application entry point and main process loop
+*/
+void TORQUER_AppMain(void)
 {
-    int32 status;
-
-    /*
-    ** Register the app with Executive services
-    */
-    CFE_ES_RegisterApp();
+    int32 status = OS_SUCCESS;
 
     /*
     ** Create the first Performance Log entry
     */
-    CFE_ES_PerfLogEntry(GENERIC_TORQUER_APP_PERF_ID);
+    CFE_ES_PerfLogEntry(GENERIC_TORQUER_PERF_ID);
 
-    /*
-    ** Perform application specific initialization
-    ** If the Initialization fails, set the RunStatus to
-    ** CFE_ES_RunStatus_APP_ERROR and the App will not enter the RunLoop
+    /* 
+    ** Perform application initialization
     */
     status = GENERIC_TORQUER_AppInit();
     if (status != CFE_SUCCESS)
     {
-        RunStatus = CFE_ES_RunStatus_APP_ERROR;
+        GENERIC_TORQUER_AppData.RunStatus = CFE_ES_RunStatus_APP_ERROR;
     }
 
     /*
-    ** GENERIC_TORQUER Runloop
+    ** Main loop
     */
-    while (CFE_ES_RunLoop(&RunStatus) == true)
+    while (CFE_ES_RunLoop(&GENERIC_TORQUER_AppData.RunStatus) == true)
     {
         /*
-        ** Performance Log Exit Stamp
+        ** Performance log exit stamp
         */
-        CFE_ES_PerfLogExit(GENERIC_TORQUER_APP_PERF_ID);
+        CFE_ES_PerfLogExit(GENERIC_TORQUER_PERF_ID);
 
-        /* Pend on receipt of command packet */
-        status = CFE_SB_RcvMsg(&GENERIC_TORQUER_AppData.MsgPtr, GENERIC_TORQUER_AppData.CommandPipe, CFE_SB_PEND_FOREVER);
+        /* 
+        ** Pend on the arrival of the next Software Bus message
+        ** Note that this is the standard, but timeouts are available
+        */
+        status = CFE_SB_ReceiveBuffer((CFE_SB_Buffer_t **)&GENERIC_TORQUER_AppData.MsgPtr,  GENERIC_TORQUER_AppData.CmdPipe,  CFE_SB_PEND_FOREVER);
+        
+        /* 
+        ** Begin performance metrics on anything after this line. This will help to determine
+        ** where we are spending most of the time during this app execution.
+        */
+        CFE_ES_PerfLogEntry(GENERIC_TORQUER_PERF_ID);
 
         /*
-        ** Performance Log Entry Stamp
+        ** If the CFE_SB_ReceiveBuffer was successful, then continue to process the command packet
+        ** If not, then exit the application in error.
+        ** Note that a SB read error should not always result in an app quitting.
         */
-        CFE_ES_PerfLogEntry(GENERIC_TORQUER_APP_PERF_ID);
-
         if (status == CFE_SUCCESS)
         {
-            GENERIC_TORQUER_ProcessCommandPacket(GENERIC_TORQUER_AppData.MsgPtr);
+            GENERIC_TORQUER_ProcessCommandPacket();
         }
         else
         {
-            CFE_EVS_SendEvent(GENERIC_TORQUER_PIPE_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "GENERIC_TORQUER APP: SB Pipe Read Error, App Will Exit");
-
-            RunStatus = CFE_ES_RunStatus_APP_ERROR;
+            CFE_EVS_SendEvent(GENERIC_TORQUER_PIPE_ERR_EID, CFE_EVS_EventType_ERROR, "GENERIC_TORQUER: SB Pipe Read Error = %d", (int) status);
+            GENERIC_TORQUER_AppData.RunStatus = CFE_ES_RunStatus_APP_ERROR;
         }
     }
 
-    RunStatus = CFE_ES_RunStatus_APP_EXIT; // we are wanting to exit... make sure everyone knows it
-
-    status = GENERIC_TORQUER_DeviceShutdown();
-    if (status != CFE_SUCCESS)
-    {
-        CFE_ES_WriteToSysLog("Generic_torquer App: Error Shutting Down Device, RC = 0x%08lX\n", (unsigned long)status);
-    }
+    /*
+    ** Disable component, which cleans up the interface, upon exit
+    */
+    GENERIC_TORQUER_Disable();
+    trq_close(&GENERIC_TORQUER_AppData.trqDevice[0]); /* TODO: Move this into disable when close issue resolved in HWLIB */
 
     /*
-    ** Performance Log Exit Stamp
+    ** Performance log exit stamp
     */
-    CFE_ES_PerfLogExit(GENERIC_TORQUER_APP_PERF_ID);
+    CFE_ES_PerfLogExit(GENERIC_TORQUER_PERF_ID);
 
-    CFE_ES_ExitApp(RunStatus);
+    /*
+    ** Exit the application
+    */
+    CFE_ES_ExitApp(GENERIC_TORQUER_AppData.RunStatus);
+} 
 
-} /* End of GENERIC_TORQUER_AppMain() */
 
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *  */
-/*                                                                            */
-/* Name:  GENERIC_TORQUER_AppInit()                                                    */
-/*                                                                            */
-/* Purpose:                                                                   */
-/*        Initialization                                                      */
-/*                                                                            */
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
-static int32 GENERIC_TORQUER_AppInit(void)
+/* 
+** Initialize application
+*/
+int32 GENERIC_TORQUER_AppInit(void)
 {
-    int32 status;
-
-    RunStatus = CFE_ES_RunStatus_APP_RUN;
-
-    /*
-    ** Initialize app command execution counters
-    */
-    GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandCounter = 0;
-    GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter = 0;
-
-    /*
-    ** Initialize app configuration data
-    */
-    GENERIC_TORQUER_AppData.PipeDepth = GENERIC_TORQUER_PIPE_DEPTH;
-
-    /*
-    ** Initialize event filter table...
-    */
-    GENERIC_TORQUER_AppData.EventFilters[0].EventID = GENERIC_TORQUER_STARTUP_INF_EID;
-    GENERIC_TORQUER_AppData.EventFilters[0].Mask    = 0x0000;
-    GENERIC_TORQUER_AppData.EventFilters[1].EventID = GENERIC_TORQUER_COMMAND_ERR_EID;
-    GENERIC_TORQUER_AppData.EventFilters[1].Mask    = 0x0000;
-    GENERIC_TORQUER_AppData.EventFilters[2].EventID = GENERIC_TORQUER_COMMANDNOP_INF_EID;
-    GENERIC_TORQUER_AppData.EventFilters[2].Mask    = 0x0000;
-    GENERIC_TORQUER_AppData.EventFilters[3].EventID = GENERIC_TORQUER_COMMANDRST_INF_EID;
-    GENERIC_TORQUER_AppData.EventFilters[3].Mask    = 0x0000;
-    GENERIC_TORQUER_AppData.EventFilters[4].EventID = GENERIC_TORQUER_INVALID_MSGID_ERR_EID;
-    GENERIC_TORQUER_AppData.EventFilters[4].Mask    = 0x0000;
-    GENERIC_TORQUER_AppData.EventFilters[5].EventID = GENERIC_TORQUER_LEN_ERR_EID;
-    GENERIC_TORQUER_AppData.EventFilters[5].Mask    = 0x0000;
-    GENERIC_TORQUER_AppData.EventFilters[6].EventID = GENERIC_TORQUER_PIPE_ERR_EID;
-    GENERIC_TORQUER_AppData.EventFilters[6].Mask    = 0x0000;
+    int32 status = OS_SUCCESS;
+    
+    GENERIC_TORQUER_AppData.RunStatus = CFE_ES_RunStatus_APP_RUN;
 
     /*
     ** Register the events
-    */
-    status = CFE_EVS_Register(GENERIC_TORQUER_AppData.EventFilters, GENERIC_TORQUER_EVENT_COUNTS, CFE_EVS_EventFilter_BINARY);
+    */ 
+    status = CFE_EVS_Register(NULL, 0, CFE_EVS_EventFilter_BINARY);    /* as default, no filters are used */
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("Generic_torquer App: Error Registering Events, RC = 0x%08lX\n", (unsigned long)status);
-        return (status);
+        CFE_ES_WriteToSysLog("GENERIC_TORQUER: Error registering for event services: 0x%08X\n", (unsigned int) status);
+       return status;
     }
 
     /*
-    ** Initialize housekeeping packet (clear user data area).
+    ** Create the Software Bus command pipe 
     */
-    CFE_SB_InitMsg(&GENERIC_TORQUER_AppData.HkBuf.MsgHdr, GENERIC_TORQUER_APP_HK_TLM_MID, sizeof(GENERIC_TORQUER_AppData.HkBuf), true);
-
-    /*
-    ** Create Software Bus message pipe.
-    */
-    status = CFE_SB_CreatePipe(&GENERIC_TORQUER_AppData.CommandPipe, GENERIC_TORQUER_AppData.PipeDepth, "GENERIC_TORQUER_CMD_PIPE");
+    status = CFE_SB_CreatePipe(&GENERIC_TORQUER_AppData.CmdPipe, GENERIC_TORQUER_PIPE_DEPTH, "GENERIC_TRQ_PIPE");
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("Generic_torquer App: Error creating pipe, RC = 0x%08lX\n", (unsigned long)status);
-        return (status);
+        CFE_EVS_SendEvent(GENERIC_TORQUER_PIPE_ERR_EID, CFE_EVS_EventType_ERROR,
+            "Error Creating SB Pipe,RC=0x%08X",(unsigned int) status);
+       return status;
     }
-
+    
     /*
-    ** Subscribe to Housekeeping request commands
+    ** Subscribe to ground commands
     */
-    status = CFE_SB_Subscribe(GENERIC_TORQUER_APP_SEND_HK_MID, GENERIC_TORQUER_AppData.CommandPipe);
+    status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(GENERIC_TORQUER_CMD_MID), GENERIC_TORQUER_AppData.CmdPipe);
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("Generic_torquer App: Error Subscribing to HK request, RC = 0x%08lX\n", (unsigned long)status);
-        return (status);
+        CFE_EVS_SendEvent(GENERIC_TORQUER_SUB_CMD_ERR_EID, CFE_EVS_EventType_ERROR,
+            "Error Subscribing to HK Gnd Cmds, MID=0x%04X, RC=0x%08X",
+            GENERIC_TORQUER_CMD_MID, (unsigned int) status);
+        return status;
     }
 
     /*
-    ** Subscribe to ground command packets
+    ** Subscribe to housekeeping (hk) message requests
     */
-    status = CFE_SB_Subscribe(GENERIC_TORQUER_APP_CMD_MID, GENERIC_TORQUER_AppData.CommandPipe);
+    status = CFE_SB_Subscribe(CFE_SB_ValueToMsgId(GENERIC_TORQUER_REQ_HK_MID), GENERIC_TORQUER_AppData.CmdPipe);
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("Generic_torquer App: Error Subscribing to Command, RC = 0x%08lX\n", (unsigned long)status);
-
-        return (status);
+        CFE_EVS_SendEvent(GENERIC_TORQUER_SUB_REQ_HK_ERR_EID, CFE_EVS_EventType_ERROR,
+            "Error Subscribing to HK Request, MID=0x%04X, RC=0x%08X",
+            GENERIC_TORQUER_REQ_HK_MID, (unsigned int) status);
+        return status;
     }
 
-    status = GENERIC_TORQUER_DeviceInit();
+    /* 
+    ** Initialize the published HK message - this HK message will contain the 
+    ** telemetry that has been defined in the GENERIC_TORQUER_HkTelemetryPkt for this app.
+    */
+    CFE_MSG_Init(CFE_MSG_PTR(GENERIC_TORQUER_AppData.HkTelemetryPkt.TlmHeader),
+                   CFE_SB_ValueToMsgId(GENERIC_TORQUER_HK_TLM_MID),
+                   GENERIC_TORQUER_HK_TLM_LNGTH);
+
+    /* 
+    ** Always reset all counters during application initialization 
+    */
+    GENERIC_TORQUER_ResetCounters();
+
+    /*
+    ** Initialize application data
+    ** Note that counters are excluded as they were reset in the previous code block
+    */
+    GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_DISABLED;
+
+    /*
+    ** Initialize torquer interfaces
+    */ 
+    GENERIC_TORQUER_AppData.HkTelemetryPkt.TorquerPeriod = GENERIC_TORQUER_CFG_PERIOD;
+    for(uint8_t i = 0; i < 3; i++)
+    {
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqInfo[i].Direction = 0;
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqInfo[i].PercentOn = 0;
+
+        GENERIC_TORQUER_AppData.trqDevice[i].trq_num = i;
+        GENERIC_TORQUER_AppData.trqDevice[i].timer_period_ns = GENERIC_TORQUER_CFG_PERIOD;
+        GENERIC_TORQUER_AppData.trqDevice[i].timerfd = 0;
+        GENERIC_TORQUER_AppData.trqDevice[i].direction_pin_fd = 0;
+        GENERIC_TORQUER_AppData.trqDevice[i].timer_high_ns = 0;
+        GENERIC_TORQUER_AppData.trqDevice[i].positive_direction = false;
+        GENERIC_TORQUER_AppData.trqDevice[i].enabled = false;
+
+        trq_init(&GENERIC_TORQUER_AppData.trqDevice[i]);  /* TODO: Move this into enable once HWLIB issue resolved */
+    }
+
+    /* 
+     ** Send an information event that the app has initialized. 
+     ** This is useful for debugging the loading of individual applications.
+     */
+    status = CFE_EVS_SendEvent(GENERIC_TORQUER_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION,
+               "GENERIC_TORQUER App Initialized. Version %d.%d.%d.%d",
+                GENERIC_TORQUER_MAJOR_VERSION,
+                GENERIC_TORQUER_MINOR_VERSION, 
+                GENERIC_TORQUER_REVISION, 
+                GENERIC_TORQUER_MISSION_REV);	
     if (status != CFE_SUCCESS)
     {
-        CFE_ES_WriteToSysLog("Generic_torquer App: Error Initializing Device, RC = 0x%08lX\n", (unsigned long)status);
-
-        return (status);
+        CFE_ES_WriteToSysLog("GENERIC_TORQUER: Error sending initialization event: 0x%08X\n", (unsigned int) status);
     }
+    return status;
+} 
 
-    CFE_EVS_SendEvent(GENERIC_TORQUER_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION,
-                      "GENERIC_TORQUER App Initialized. Version %d.%d.%d.%d",
-                      GENERIC_TORQUER_APP_MAJOR_VERSION,
-                      GENERIC_TORQUER_APP_MINOR_VERSION,
-                      GENERIC_TORQUER_APP_REVISION,
-                      GENERIC_TORQUER_APP_MISSION_REV);
 
-    return (CFE_SUCCESS);
-
-} /* End of GENERIC_TORQUER_AppInit() */
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
-/*  Name:  GENERIC_TORQUER_ProcessCommandPacket                                        */
-/*                                                                            */
-/*  Purpose:                                                                  */
-/*     This routine will process any packet that is received on the GENERIC_TORQUER    */
-/*     command pipe.                                                          */
-/*                                                                            */
-/* * * * * * * * * * * * * * * * * * * * * * * *  * * * * * * *  * *  * * * * */
-static void GENERIC_TORQUER_ProcessCommandPacket(CFE_SB_MsgPtr_t Msg)
+/* 
+** Process packets received on the GENERIC_TORQUER command pipe
+*/
+void GENERIC_TORQUER_ProcessCommandPacket(void)
 {
-    CFE_SB_MsgId_t MsgId;
-
-    MsgId = CFE_SB_GetMsgId(Msg);
-
-    switch (MsgId)
+    CFE_SB_MsgId_t MsgId = CFE_SB_INVALID_MSG_ID;
+    CFE_MSG_GetMsgId(GENERIC_TORQUER_AppData.MsgPtr, &MsgId);
+    switch (CFE_SB_MsgIdToValue(MsgId))
     {
-        case GENERIC_TORQUER_APP_CMD_MID:
-            GENERIC_TORQUER_ProcessGroundCommand(Msg);
-            break;
-
-        case GENERIC_TORQUER_APP_SEND_HK_MID:
-            GENERIC_TORQUER_ReportHousekeeping((CFE_SB_CmdHdr_t *)Msg);
-            break;
-
-        default:
-            CFE_EVS_SendEvent(GENERIC_TORQUER_INVALID_MSGID_ERR_EID, CFE_EVS_EventType_ERROR,
-                              "GENERIC_TORQUER: invalid command packet,MID = 0x%x", (unsigned int)CFE_SB_MsgIdToValue(MsgId));
-            break;
-    }
-
-    return;
-
-} /* End GENERIC_TORQUER_ProcessCommandPacket */
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
-/*                                                                            */
-/* Name:  GENERIC_TORQUER_ProcessGroundCommand()                                       */
-/*                                                                            */
-/* Purpose:                                                                   */
-/*        GENERIC_TORQUER ground commands                                              */
-/*                                                                            */
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
-static void GENERIC_TORQUER_ProcessGroundCommand(CFE_SB_MsgPtr_t Msg)
-{
-    uint16 CommandCode = CFE_SB_GetCmdCode(Msg);
-    GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandCounter++;
-
-    /*
-    ** Process "known" GENERIC_TORQUER app ground commands
-    */
-    switch (CommandCode)
-    {
-        case GENERIC_TORQUER_APP_NOOP_CC:
-            if (GENERIC_TORQUER_VerifyCmdLength(Msg, sizeof(GENERIC_TORQUER_Noop_t)))
-            {
-                GENERIC_TORQUER_Noop((GENERIC_TORQUER_Noop_t *)Msg);
-            } else {
-                GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
-            }
-
-            break;
-
-        case GENERIC_TORQUER_APP_RESET_COUNTERS_CC:
-            if (GENERIC_TORQUER_VerifyCmdLength(Msg, sizeof(GENERIC_TORQUER_ResetCounters_t)))
-            {
-                GENERIC_TORQUER_ResetCounters((GENERIC_TORQUER_ResetCounters_t *)Msg);
-            } else {
-                GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
-            }
-
+        /*
+        ** Ground Commands with command codes fall under the GENERIC_TORQUER_CMD_MID (Message ID)
+        */
+        case GENERIC_TORQUER_CMD_MID:
+            GENERIC_TORQUER_ProcessGroundCommand();
             break;
 
         /*
-        ** TODO: Edit and add more command codes as appropriate for the application
+        ** All other messages, other than ground commands, add to this case statement.
         */
-        case GENERIC_TORQUER_APP_RESET_DEV_CNTRS_CC:
-            GENERIC_TORQUER_DeviceResetCounters();
+        case GENERIC_TORQUER_REQ_HK_MID:
+            GENERIC_TORQUER_ProcessTelemetryRequest();
             break;
 
-        case GENERIC_TORQUER_GET_DEV_DATA_CC:
-            if (GENERIC_TORQUER_VerifyCmdLength(Msg, sizeof(GENERIC_TORQUER_GetDevData_cmd_t))) {
-                GENERIC_TORQUER_DeviceGetGeneric_torquerDataCommand();
-            } else {
-                GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
-            }
-            break;
-
-        case GENERIC_TORQUER_CONFIG_CC:
-            if (GENERIC_TORQUER_VerifyCmdLength(Msg, sizeof(GENERIC_TORQUER_Config_cmd_t)))
-            {
-                GENERIC_TORQUER_DeviceConfigurationCommand(((GENERIC_TORQUER_Config_cmd_t *)Msg)->MillisecondStreamDelay);
-            } else {
-                GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
-            }
-            break;
-
-        case GENERIC_TORQUER_OTHER_CMD_CC:
-            if (GENERIC_TORQUER_VerifyCmdLength(Msg, sizeof(GENERIC_TORQUER_Other_cmd_t)))
-            {
-                GENERIC_TORQUER_DeviceOtherCommand();
-            } else {
-                GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
-            }
-            break;
-
-        case GENERIC_TORQUER_RAW_CMD_CC:
-            if (GENERIC_TORQUER_VerifyCmdLength(Msg, sizeof(GENERIC_TORQUER_Raw_cmd_t)))
-            {
-                GENERIC_TORQUER_DeviceRawCommand(((GENERIC_TORQUER_Raw_cmd_t *)Msg)->RawCmd, sizeof(((GENERIC_TORQUER_Raw_cmd_t *)Msg)->RawCmd));
-            } else {
-                GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
-            }
-            break;
-
-        case GENERIC_TORQUER_SEND_DEV_HK_CC:
-            if (GENERIC_TORQUER_VerifyCmdLength(Msg, sizeof(GENERIC_TORQUER_SendDevHk_cmd_t))) {
-                GENERIC_TORQUER_ReportDeviceHousekeeping();
-            } else {
-                GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
-            }
-            break;
-
-        case GENERIC_TORQUER_SEND_DEV_DATA_CC:
-            if (GENERIC_TORQUER_VerifyCmdLength(Msg, sizeof(GENERIC_TORQUER_SendDevData_cmd_t))) {
-                GENERIC_TORQUER_ReportDeviceGeneric_torquerData();
-            } else {
-                GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
-            }
-            break;
-
-        /* default case already found during FC vs length test */
+        /*
+        ** All other invalid messages that this app doesn't recognize, 
+        ** increment the command error counter and log as an error event.  
+        */
         default:
-            CFE_EVS_SendEvent(GENERIC_TORQUER_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR, "Invalid ground command code: CC = %d",
-                              CommandCode);
-            GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
+            GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandErrorCount++;
+            CFE_EVS_SendEvent(GENERIC_TORQUER_PROCESS_CMD_ERR_EID,CFE_EVS_EventType_ERROR, "GENERIC_TORQUER: Invalid command packet, MID = 0x%x", CFE_SB_MsgIdToValue(MsgId));
             break;
     }
-
     return;
+} 
 
-} /* End of GENERIC_TORQUER_ProcessGroundCommand() */
 
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
-/*  Name:  GENERIC_TORQUER_ReportHousekeeping                                          */
-/*                                                                            */
-/*  Purpose:                                                                  */
-/*         This function is triggered in response to a task telemetry request */
-/*         from the housekeeping task. This function will gather the Apps     */
-/*         telemetry, packetize it and send it to the housekeeping task via   */
-/*         the software bus                                                   */
-/* * * * * * * * * * * * * * * * * * * * * * * *  * * * * * * *  * *  * * * * */
-static int32 GENERIC_TORQUER_ReportHousekeeping(const CFE_SB_CmdHdr_t *Msg)
+/*
+** Process ground commands
+*/
+void GENERIC_TORQUER_ProcessGroundCommand(void)
 {
-    GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandCounter++;
+    int32 status = OS_SUCCESS;
+    CFE_SB_MsgId_t MsgId = CFE_SB_INVALID_MSG_ID;
+    CFE_MSG_FcnCode_t CommandCode = 0;
 
     /*
-    ** Send housekeeping telemetry packet...
+    ** MsgId is only needed if the command code is not recognized. See default case
     */
-    CFE_SB_TimeStampMsg(&GENERIC_TORQUER_AppData.HkBuf.MsgHdr);
-    CFE_SB_SendMsg(&GENERIC_TORQUER_AppData.HkBuf.MsgHdr);
-
-    return CFE_SUCCESS;
-
-} /* End of GENERIC_TORQUER_ReportHousekeeping() */
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
-/*                                                                            */
-/* Name:  GENERIC_TORQUER_Noop                                                         */
-/*                                                                            */
-/* Purpose:                                                                   */
-/*        GENERIC_TORQUER NOOP command                                                 */
-/*                                                                            */
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
-static int32 GENERIC_TORQUER_Noop(const GENERIC_TORQUER_Noop_t *Msg)
-{
-
-    CFE_EVS_SendEvent(GENERIC_TORQUER_COMMANDNOP_INF_EID, CFE_EVS_EventType_INFORMATION, "GENERIC_TORQUER: NOOP command");
-
-    return CFE_SUCCESS;
-
-} /* End of GENERIC_TORQUER_Noop */
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
-/*  Name:  GENERIC_TORQUER_ResetCounters                                               */
-/*                                                                            */
-/*  Purpose:                                                                  */
-/*         This function resets all the global counter variables that are     */
-/*         part of the task telemetry.                                        */
-/*                                                                            */
-/* * * * * * * * * * * * * * * * * * * * * * * *  * * * * * * *  * *  * * * * */
-static int32 GENERIC_TORQUER_ResetCounters(const GENERIC_TORQUER_ResetCounters_t *Msg)
-{
-
-    GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandCounter = 0;
-    GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter = 0;
-
-    CFE_EVS_SendEvent(GENERIC_TORQUER_COMMANDRST_INF_EID, CFE_EVS_EventType_INFORMATION, "GENERIC_TORQUER: RESET command");
-
-    return CFE_SUCCESS;
-
-} /* End of GENERIC_TORQUER_ResetCounters() */
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
-/*                                                                            */
-/* Name:  GENERIC_TORQUER_VerifyCmdLength()                                            */
-/*                                                                            */
-/* Purpose:                                                                   */
-/*        Verify command packet length                                        */
-/*                                                                            */
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
-static bool GENERIC_TORQUER_VerifyCmdLength(CFE_SB_MsgPtr_t Msg, uint16 ExpectedLength)
-{
-    bool result = true;
-
-    uint16 ActualLength = CFE_SB_GetTotalMsgLength(Msg);
+    CFE_MSG_GetMsgId(GENERIC_TORQUER_AppData.MsgPtr, &MsgId);
 
     /*
-    ** Verify the command packet length.
+    ** Ground Commands, by definition, have a command code (_CC) associated with them
+    ** Pull this command code from the message and then process
     */
-    if (ExpectedLength != ActualLength)
+    CFE_MSG_GetFcnCode(GENERIC_TORQUER_AppData.MsgPtr, &CommandCode);
+    switch (CommandCode)
     {
-        CFE_SB_MsgId_t MessageID   = CFE_SB_GetMsgId(Msg);
-        uint16         CommandCode = CFE_SB_GetCmdCode(Msg);
+        /*
+        ** NOOP Command
+        */
+        case GENERIC_TORQUER_NOOP_CC:
+            /*
+            ** First, verify the command length immediately after CC identification 
+            ** Note that VerifyCmdLength handles the command and command error counters
+            */
+            if (GENERIC_TORQUER_VerifyCmdLength(GENERIC_TORQUER_AppData.MsgPtr, sizeof(GENERIC_TORQUER_NoArgs_cmd_t)) == OS_SUCCESS)
+            {
+                /* Second, send EVS event on successful receipt ground commands*/
+                CFE_EVS_SendEvent(GENERIC_TORQUER_CMD_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION, "GENERIC_TORQUER: NOOP command received");
+                /* Third, do the desired command action if applicable, in the case of NOOP it is no operation */
+            }
+            break;
+
+        /*
+        ** Reset Counters Command
+        */
+        case GENERIC_TORQUER_RESET_COUNTERS_CC:
+            if (GENERIC_TORQUER_VerifyCmdLength(GENERIC_TORQUER_AppData.MsgPtr, sizeof(GENERIC_TORQUER_NoArgs_cmd_t)) == OS_SUCCESS)
+            {
+                CFE_EVS_SendEvent(GENERIC_TORQUER_CMD_RESET_INF_EID, CFE_EVS_EventType_INFORMATION, "GENERIC_TORQUER: RESET counters command received");
+                GENERIC_TORQUER_ResetCounters();
+            }
+            break;
+
+        /*
+        ** Enable Command
+        */
+        case GENERIC_TORQUER_ENABLE_CC:
+            if (GENERIC_TORQUER_VerifyCmdLength(GENERIC_TORQUER_AppData.MsgPtr, sizeof(GENERIC_TORQUER_NoArgs_cmd_t)) == OS_SUCCESS)
+            {
+                CFE_EVS_SendEvent(GENERIC_TORQUER_CMD_ENABLE_INF_EID, CFE_EVS_EventType_INFORMATION, "GENERIC_TORQUER: Enable command received");
+                GENERIC_TORQUER_Enable();
+            }
+            break;
+
+        /*
+        ** Disable Command
+        */
+        case GENERIC_TORQUER_DISABLE_CC:
+            if (GENERIC_TORQUER_VerifyCmdLength(GENERIC_TORQUER_AppData.MsgPtr, sizeof(GENERIC_TORQUER_NoArgs_cmd_t)) == OS_SUCCESS)
+            {
+                CFE_EVS_SendEvent(GENERIC_TORQUER_CMD_DISABLE_INF_EID, CFE_EVS_EventType_INFORMATION, "GENERIC_TORQUER: Disable command received");
+                GENERIC_TORQUER_Disable();
+            }
+            break;
+
+        /*
+        ** Set Configuration Command
+        */
+        case GENERIC_TORQUER_CONFIG_CC:
+            if (GENERIC_TORQUER_VerifyCmdLength(GENERIC_TORQUER_AppData.MsgPtr, sizeof(GENERIC_TORQUER_Percent_On_cmd_t)) == OS_SUCCESS)
+            {
+                //CFE_EVS_SendEvent(GENERIC_TORQUER_CMD_CONFIG_INF_EID, CFE_EVS_EventType_INFORMATION, "GENERIC_TORQUER: Configuration command received");
+                status = GENERIC_TORQUER_PercentOn(GENERIC_TORQUER_AppData.MsgPtr);
+                if (status == OS_SUCCESS)
+                {
+                    GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceCount++;
+                }
+                else
+                {
+                    GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount++;
+                }
+            }
+            break;
+
+        /*
+        ** Set All Configuration Command
+        */
+        case GENERIC_TORQUER_CONFIG_ALL_CC:
+            if (GENERIC_TORQUER_VerifyCmdLength(GENERIC_TORQUER_AppData.MsgPtr, sizeof(GENERIC_TORQUER_All_Percent_On_cmd_t)) == OS_SUCCESS)
+            {
+                //CFE_EVS_SendEvent(GENERIC_TORQUER_CMD_CONFIG_ALL_INF_EID, CFE_EVS_EventType_INFORMATION, "GENERIC_TORQUER: Configuration command received");
+                status = GENERIC_TORQUER_AllPercentOn(GENERIC_TORQUER_AppData.MsgPtr);
+                if (status == OS_SUCCESS)
+                {
+                    GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceCount++;
+                }
+                else
+                {
+                    GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount++;
+                }
+            }
+            break;
+
+        /*
+        ** Invalid Command Codes
+        */
+        default:
+            /* Increment the error counter upon receipt of an invalid command */
+            GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandErrorCount++;
+            CFE_EVS_SendEvent(GENERIC_TORQUER_CMD_ERR_EID, CFE_EVS_EventType_ERROR, 
+                "GENERIC_TORQUER: Invalid command code for packet, MID = 0x%x, cmdCode = 0x%x", CFE_SB_MsgIdToValue(MsgId), CommandCode);
+            break;
+    }
+    return;
+} 
+
+
+/*
+** Process Telemetry Request - Triggered in response to a telemetery request
+*/
+void GENERIC_TORQUER_ProcessTelemetryRequest(void)
+{
+    int32 status = OS_SUCCESS;
+    CFE_SB_MsgId_t MsgId = CFE_SB_INVALID_MSG_ID;
+    CFE_MSG_FcnCode_t CommandCode = 0;
+
+    /* MsgId is only needed if the command code is not recognized. See default case */
+    CFE_MSG_GetMsgId(GENERIC_TORQUER_AppData.MsgPtr, &MsgId);
+
+    /* Pull this command code from the message and then process */
+    CFE_MSG_GetFcnCode(GENERIC_TORQUER_AppData.MsgPtr, &CommandCode);
+    switch (CommandCode)
+    {
+        case GENERIC_TORQUER_REQ_HK_TLM:
+            GENERIC_TORQUER_ReportHousekeeping();
+            break;
+
+        /*
+        ** Invalid Command Codes
+        */
+        default:
+            /* Increment the error counter upon receipt of an invalid command */
+            GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandErrorCount++;
+            CFE_EVS_SendEvent(GENERIC_TORQUER_DEVICE_TLM_ERR_EID, CFE_EVS_EventType_ERROR, 
+                "GENERIC_TORQUER: Invalid command code for packet, MID = 0x%x, cmdCode = 0x%x", CFE_SB_MsgIdToValue(MsgId), CommandCode);
+            break;
+    }
+    return;
+}
+
+
+/* 
+** Report Application Housekeeping
+*/
+void GENERIC_TORQUER_ReportHousekeeping(void)
+{
+    /* Time stamp and publish housekeeping telemetry */
+    CFE_SB_TimeStampMsg((CFE_MSG_Message_t *) &GENERIC_TORQUER_AppData.HkTelemetryPkt);
+    CFE_SB_TransmitMsg((CFE_MSG_Message_t *) &GENERIC_TORQUER_AppData.HkTelemetryPkt, true);
+    return;
+}
+
+
+/*
+** Reset all global counter variables
+*/
+void GENERIC_TORQUER_ResetCounters(void)
+{
+    GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandErrorCount = 0;
+    GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandCount = 0;
+    GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount = 0;
+    GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceCount = 0;
+    return;
+} 
+
+
+/*
+** Enable Component
+*/
+void GENERIC_TORQUER_Enable(void)
+{
+    int32 status = OS_SUCCESS;
+
+    /* Check that device is disabled */
+    if (GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled == GENERIC_TORQUER_DEVICE_DISABLED)
+    {
+        /*
+        ** Initialize hardware interface data
+        */
+        for(uint8_t i = 0; i < 3; i++)
+        {
+            status += trq_command(&GENERIC_TORQUER_AppData.trqDevice[i], 0, 0);
+            GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqInfo[i].Direction = 0;
+            GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqInfo[i].PercentOn = 0;
+        }
+
+        if (status == OS_SUCCESS)
+        {
+            GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceCount++;
+            GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_ENABLED;
+            CFE_EVS_SendEvent(GENERIC_TORQUER_ENABLE_INF_EID, CFE_EVS_EventType_INFORMATION, "GENERIC_TORQUER: Device enabled");
+        }
+        else
+        {
+            GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount++;
+            CFE_EVS_SendEvent(GENERIC_TORQUER_INIT_ERR_EID, CFE_EVS_EventType_ERROR, "GENERIC_TORQUER: Torquer initialization error %d", status);
+        }
+    }
+    else
+    {
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount++;
+        CFE_EVS_SendEvent(GENERIC_TORQUER_ENABLE_ERR_EID, CFE_EVS_EventType_ERROR, "GENERIC_TORQUER: Device enable failed, already enabled");
+    }
+    return;
+}
+
+
+/*
+** Disable Component
+*/
+void GENERIC_TORQUER_Disable(void)
+{
+    int32 status = OS_SUCCESS;
+
+    /* Check that device is enabled */
+    if (GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled == GENERIC_TORQUER_DEVICE_ENABLED)
+    {
+        for(uint8_t i = 0; i < 3; i++)
+        {
+            /* Set to zero  */
+            trq_command(&GENERIC_TORQUER_AppData.trqDevice[i], 0, 0);
+            GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqInfo[i].Direction = 0;
+            GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqInfo[i].PercentOn = 0;
+        }        
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceCount++;
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_DISABLED;
+        CFE_EVS_SendEvent(GENERIC_TORQUER_DISABLE_INF_EID, CFE_EVS_EventType_INFORMATION, "GENERIC_TORQUER: Device disabled");
+    }
+    else
+    {
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount++;
+        CFE_EVS_SendEvent(GENERIC_TORQUER_DISABLE_ERR_EID, CFE_EVS_EventType_ERROR, "GENERIC_TORQUER: Device disable failed, already disabled");
+    }
+    return;
+}
+
+/*
+** Configure torquer using hwlib
+*/
+int32 GENERIC_TORQUER_Config(uint8 num, uint8 percent, uint8 dir)
+{
+    int32 status = OS_SUCCESS;
+
+    status = trq_command(&GENERIC_TORQUER_AppData.trqDevice[num], percent, dir);        
+    if (status == OS_SUCCESS)
+    {
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqInfo[num].PercentOn = percent;
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqInfo[num].Direction = dir;
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceCount++;
+    }
+    else
+    {
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount++;
+        CFE_EVS_SendEvent(GENERIC_TORQUER_CONFIG_ERR_EID, CFE_EVS_EventType_INFORMATION, "GENERIC_TORQUER: Failed to configure device %d", num);    
+    }
+    return status;
+}
+
+
+/*
+** Configure a specific torquer
+*/
+int32 GENERIC_TORQUER_PercentOn(CFE_MSG_Message_t * msg)
+{
+    int32 status = OS_SUCCESS;
+    GENERIC_TORQUER_Percent_On_cmd_t* percent_cmd_ptr = (GENERIC_TORQUER_Percent_On_cmd_t*) msg;
+
+    /* Check that device is enabled */
+    if (GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled == GENERIC_TORQUER_DEVICE_ENABLED)
+    {
+        GENERIC_TORQUER_Config(percent_cmd_ptr->TrqNum, percent_cmd_ptr->PercentOn, percent_cmd_ptr->Direction);
+    }
+    return status;
+}
+
+
+/*
+** Configure all torquers at once
+*/
+int32 GENERIC_TORQUER_AllPercentOn(CFE_MSG_Message_t * msg)
+{
+    int32 status = OS_SUCCESS;
+    GENERIC_TORQUER_All_Percent_On_cmd_t* all_percent_cmd_ptr = (GENERIC_TORQUER_All_Percent_On_cmd_t*) msg;
+
+    /* Check that device is enabled */
+    if (GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled == GENERIC_TORQUER_DEVICE_ENABLED)
+    {
+        GENERIC_TORQUER_Config(0, all_percent_cmd_ptr->PercentOn_0, all_percent_cmd_ptr->Direction_0);
+        GENERIC_TORQUER_Config(1, all_percent_cmd_ptr->PercentOn_1, all_percent_cmd_ptr->Direction_1);
+        GENERIC_TORQUER_Config(2, all_percent_cmd_ptr->PercentOn_2, all_percent_cmd_ptr->Direction_2);
+    }
+    return status;
+}
+
+
+/*
+** Verify command packet length matches expected
+*/
+int32 GENERIC_TORQUER_VerifyCmdLength(CFE_MSG_Message_t * msg, uint16 expected_length)
+{     
+    int32 status = OS_SUCCESS;
+    CFE_SB_MsgId_t msg_id = CFE_SB_INVALID_MSG_ID;
+    CFE_MSG_FcnCode_t cmd_code = 0;
+    size_t actual_length = 0;
+    
+    CFE_MSG_GetSize(msg, &actual_length);
+    if (expected_length == actual_length)
+    {
+        /* Increment the command counter upon receipt of an invalid command */
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandCount++;
+    }
+    else
+    {
+        CFE_MSG_GetMsgId(msg, &msg_id);
+        CFE_MSG_GetFcnCode(msg, &cmd_code);
 
         CFE_EVS_SendEvent(GENERIC_TORQUER_LEN_ERR_EID, CFE_EVS_EventType_ERROR,
-                          "Invalid Msg length: ID = 0x%X,  CC = %d, Len = %d, Expected = %d",
-                          (unsigned int)CFE_SB_MsgIdToValue(MessageID), CommandCode, ActualLength, ExpectedLength);
+           "Invalid msg length: ID = 0x%X,  CC = %d, Len = %d, Expected = %d",
+              CFE_SB_MsgIdToValue(msg_id), cmd_code, actual_length, expected_length);
 
-        result = false;
+        status = OS_ERROR;
 
-        GENERIC_TORQUER_AppData.HkBuf.HkTlm.Payload.CommandErrorCounter++;
+        /* Increment the command error counter upon receipt of an invalid command */
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandErrorCount++;
     }
-
-    return (result);
-
-} /* End of GENERIC_TORQUER_VerifyCmdLength() */
+    return status;
+} 
