@@ -368,7 +368,6 @@ void GENERIC_TORQUER_ProcessGroundCommand(void)
 */
 void GENERIC_TORQUER_ProcessTelemetryRequest(void)
 {
-    int32 status = OS_SUCCESS;
     CFE_SB_MsgId_t MsgId = CFE_SB_INVALID_MSG_ID;
     CFE_MSG_FcnCode_t CommandCode = 0;
 
@@ -468,8 +467,6 @@ void GENERIC_TORQUER_Enable(void)
 */
 void GENERIC_TORQUER_Disable(void)
 {
-    int32 status = OS_SUCCESS;
-
     /* Check that device is enabled */
     if (GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled == GENERIC_TORQUER_DEVICE_ENABLED)
     {
