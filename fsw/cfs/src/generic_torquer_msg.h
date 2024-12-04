@@ -10,6 +10,7 @@
 #define _GENERIC_TORQUER_MSG_H_
 
 #include "cfe.h"
+#include "generic_torquer_device.h"
 
 
 /*
@@ -69,18 +70,6 @@ typedef struct
 
 } __attribute__((packed)) GENERIC_TORQUER_All_Percent_On_cmd_t;
 #define GENERIC_TORQUER_ALL_PERCENT_ON_CMD_LEN sizeof(GENERIC_TORQUER_All_Percent_On_cmd_t)
-
-
-/*
-** GENERIC_TORQUER device telemetry definition
-*/
-typedef struct 
-{
-    uint8   Direction;
-    uint8   PercentOn;
-    
-} __attribute__((packed)) GENERIC_TORQUER_Device_tlm_t;
-#define GENERIC_TORQUER_DEVICE_TLM_LNGTH sizeof ( GENERIC_TORQUER_Device_tlm_t )
 
 
 /*
