@@ -5,11 +5,6 @@
 ** GENERIC_TORQUER Checkout Configuration
 */
 #define GENERIC_TORQUER_CFG
-/* Note: NOS3 uart requires matching handle and bus number */
-#define GENERIC_TORQUER_CFG_STRING           "/dev/usart_16"
-#define GENERIC_TORQUER_CFG_HANDLE           16 
-#define GENERIC_TORQUER_CFG_BAUDRATE_HZ      115200
-#define GENERIC_TORQUER_CFG_MS_TIMEOUT       250
-#define GENERIC_TORQUER_CFG_DEBUG
+#define GENERIC_TORQUER_CFG_PERIOD           50000000
 
 #endif /* _GENERIC_TORQUER_CHECKOUT_DEVICE_CFG_H_ */

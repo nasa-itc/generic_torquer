@@ -15,9 +15,8 @@
 /*
 ** Global Variables
 */
-uart_info_t Generic_torquerUart; // TODO
-GENERIC_TORQUER_Device_HK_tlm_t Generic_torquerHK; // TODO
-GENERIC_TORQUER_Device_Data_tlm_t Generic_torquerData; // TODO
+trq_info_t trqDevice;
+GENERIC_TORQUER_Device_tlm_t trqHk;
 
 /*
 ** Component Functions
@@ -78,7 +77,7 @@ int process_command(int cc, int num_tokens, char tokens[MAX_INPUT_TOKENS][MAX_IN
 {
     int32_t status = OS_SUCCESS;
     int32_t exit_status = OS_SUCCESS;
-    uint32_t config;
+    uint32_t req_percent, req_direction;
 
     /* Process command */
     switch(cc) 
@@ -94,23 +93,28 @@ int process_command(int cc, int num_tokens, char tokens[MAX_INPUT_TOKENS][MAX_IN
         case CMD_HK:
             if (check_number_arguments(num_tokens, 0) == OS_SUCCESS)
             {
-                // TODO - print current values of torquer
+                OS_printf("trqHk.Direction = %d \n", trqHk.Direction);
+                OS_printf("trqHk.PercentOn = %d \n", trqHk.PercentOn);
             }
             break;
 
         case CMD_TORQUE:
-            if (check_number_arguments(num_tokens, 0) == OS_SUCCESS)
+            if (check_number_arguments(num_tokens, 2) == OS_SUCCESS)
             {
-                // TODO - set the torque value
-                //status = GENERIC_TORQUER_RequestData(&Generic_torquerUart, &Generic_torquerData);
-                //if (status == OS_SUCCESS)
-                //{
-                //    OS_printf("GENERIC_TORQUER_RequestData command success\n");
-                //}
-                //else
-                //{
-                //    OS_printf("GENERIC_TORQUER_RequestData command failed!\n");
-                //}
+                req_percent = atoi(tokens[0]);
+                req_direction = atoi(tokens[1]);
+
+                // TODO - add error checking to the above
+
+                status = GENERIC_TORQUER_Config(&trqHk, &trqDevice, req_percent, req_direction);
+                if (status == OS_SUCCESS)
+                {
+                    OS_printf("GENERIC_TORQUER_Config command success\n");
+                }
+                else
+                {
+                    OS_printf("GENERIC_TORQUER_Config command failed!\n");
+                }
             }
             break;
 
@@ -138,22 +142,27 @@ int main(int argc, char *argv[])
     #endif
 
     /* Open device specific protocols */
-    // TODO - take from app side as it already exist
+    trqHk.Direction = 0;
+    trqHk.PercentOn = 0;
+    
+    trqDevice.trq_num = 0;
+    trqDevice.timer_period_ns = GENERIC_TORQUER_CFG_PERIOD;
+    trqDevice.timerfd = 0;
+    trqDevice.direction_pin_fd = 0;
+    trqDevice.timer_high_ns = 0;
+    trqDevice.positive_direction = false;
+    trqDevice.enabled = false;
 
-    //Generic_torquerUart.deviceString = GENERIC_TORQUER_CFG_STRING;
-    //Generic_torquerUart.handle = GENERIC_TORQUER_CFG_HANDLE;
-    //Generic_torquerUart.isOpen = PORT_CLOSED;
-    //Generic_torquerUart.baud = GENERIC_TORQUER_CFG_BAUDRATE_HZ;
-    //status = uart_init_port(&Generic_torquerUart);
-    //if (status == OS_SUCCESS)
-    //{
-    //    printf("UART device %s configured with baudrate %d \n", Generic_torquerUart.deviceString, Generic_torquerUart.baud);
-    //}
-    //else
-    //{
-    //    printf("UART device %s failed to initialize! \n", Generic_torquerUart.deviceString);
-    //    run_status = OS_ERROR;
-    //}
+    status = trq_init(&trqDevice);
+    if (status == OS_SUCCESS)
+    {
+        printf("Torquer initialized successfully \n");
+    }
+    else
+    {
+        printf("Torquer device failed to initialize with error %d!\n", status);
+        run_status = OS_ERROR;
+    }
 
     /* Main loop */
     print_help();
@@ -192,8 +201,7 @@ int main(int argc, char *argv[])
     }
 
     // Close the device 
-    // TODO - close torquer device
-    //uart_close_port(&Generic_torquerUart);
+    trq_close(&trqDevice);
 
     #ifdef _NOS_ENGINE_LINK_
         nos_destroy_link();
