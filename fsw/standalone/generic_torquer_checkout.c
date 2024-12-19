@@ -15,9 +15,9 @@
 /*
 ** Global Variables
 */
-uart_info_t Generic_torquerUart;
-GENERIC_TORQUER_Device_HK_tlm_t Generic_torquerHK;
-GENERIC_TORQUER_Device_Data_tlm_t Generic_torquerData;
+uart_info_t Generic_torquerUart; // TODO
+GENERIC_TORQUER_Device_HK_tlm_t Generic_torquerHK; // TODO
+GENERIC_TORQUER_Device_Data_tlm_t Generic_torquerData; // TODO
 
 /*
 ** Component Functions
@@ -28,14 +28,10 @@ void print_help(void)
         "---------------------------------------------------------------------\n"
         "help                               - Display help                    \n"
         "exit                               - Exit app                        \n"
-        "noop                               - No operation command to device  \n"
-        "  n                                - ^                               \n"
-        "hk                                 - Request device housekeeping     \n"
+        "hk                                 - Print current housekeeping      \n"
         "  h                                - ^                               \n"
-        "generic_torquer                             - Request generic_torquer data             \n"
-        "  s                                - ^                               \n"
-        "cfg #                              - Send configuration #            \n"
-        "  c #                              - ^                               \n"
+        "torque percent# direction#         - Torque percent (0-100) and direction (0-1) \n"
+        "  t # #                            - ^                               \n"
         "\n"
     );
 }
@@ -58,14 +54,6 @@ int get_command(const char* str)
     {
         status = CMD_EXIT;
     }
-    else if(strcmp(lcmd, "noop") == 0) 
-    {
-        status = CMD_NOOP;
-    }
-    else if(strcmp(lcmd, "n") == 0) 
-    {
-        status = CMD_NOOP;
-    }
     else if(strcmp(lcmd, "hk") == 0) 
     {
         status = CMD_HK;
@@ -74,21 +62,13 @@ int get_command(const char* str)
     {
         status = CMD_HK;
     }
-    else if(strcmp(lcmd, "generic_torquer") == 0) 
+    else if(strcmp(lcmd, "torque") == 0) 
     {
-        status = CMD_GENERIC_TORQUER;
+        status = CMD_TORQUE;
     }
-    else if(strcmp(lcmd, "s") == 0) 
+    else if(strcmp(lcmd, "t") == 0) 
     {
-        status = CMD_GENERIC_TORQUER;
-    }
-    else if(strcmp(lcmd, "cfg") == 0) 
-    {
-        status = CMD_CFG;
-    }
-    else if(strcmp(lcmd, "c") == 0) 
-    {
-        status = CMD_CFG;
+        status = CMD_TORQUE;
     }
     return status;
 }
@@ -111,67 +91,29 @@ int process_command(int cc, int num_tokens, char tokens[MAX_INPUT_TOKENS][MAX_IN
             exit_status = OS_ERROR;
             break;
 
-        case CMD_NOOP:
-            if (check_number_arguments(num_tokens, 0) == OS_SUCCESS)
-            {
-                status = GENERIC_TORQUER_CommandDevice(&Generic_torquerUart, GENERIC_TORQUER_DEVICE_NOOP_CMD, 0);
-                if (status == OS_SUCCESS)
-                {
-                    OS_printf("NOOP command success\n");
-                }
-                else
-                {
-                    OS_printf("NOOP command failed!\n");
-                }
-            }
-            break;
-
         case CMD_HK:
             if (check_number_arguments(num_tokens, 0) == OS_SUCCESS)
             {
-                status = GENERIC_TORQUER_RequestHK(&Generic_torquerUart, &Generic_torquerHK);
-                if (status == OS_SUCCESS)
-                {
-                    OS_printf("GENERIC_TORQUER_RequestHK command success\n");
-                }
-                else
-                {
-                    OS_printf("GENERIC_TORQUER_RequestHK command failed!\n");
-                }
+                // TODO - print current values of torquer
             }
             break;
 
-        case CMD_GENERIC_TORQUER:
+        case CMD_TORQUE:
             if (check_number_arguments(num_tokens, 0) == OS_SUCCESS)
             {
-                status = GENERIC_TORQUER_RequestData(&Generic_torquerUart, &Generic_torquerData);
-                if (status == OS_SUCCESS)
-                {
-                    OS_printf("GENERIC_TORQUER_RequestData command success\n");
-                }
-                else
-                {
-                    OS_printf("GENERIC_TORQUER_RequestData command failed!\n");
-                }
+                // TODO - set the torque value
+                //status = GENERIC_TORQUER_RequestData(&Generic_torquerUart, &Generic_torquerData);
+                //if (status == OS_SUCCESS)
+                //{
+                //    OS_printf("GENERIC_TORQUER_RequestData command success\n");
+                //}
+                //else
+                //{
+                //    OS_printf("GENERIC_TORQUER_RequestData command failed!\n");
+                //}
             }
             break;
 
-        case CMD_CFG:
-            if (check_number_arguments(num_tokens, 1) == OS_SUCCESS)
-            {
-                config = atoi(tokens[0]);
-                status = GENERIC_TORQUER_CommandDevice(&Generic_torquerUart, GENERIC_TORQUER_DEVICE_CFG_CMD, config);
-                if (status == OS_SUCCESS)
-                {
-                    OS_printf("Configuration command success with value %u\n", config);
-                }
-                else
-                {
-                    OS_printf("Configuration command failed!\n");
-                }
-            }
-            break;
-        
         default: 
             OS_printf("Invalid command format, type 'help' for more info\n");
             break;
@@ -196,20 +138,22 @@ int main(int argc, char *argv[])
     #endif
 
     /* Open device specific protocols */
-    Generic_torquerUart.deviceString = GENERIC_TORQUER_CFG_STRING;
-    Generic_torquerUart.handle = GENERIC_TORQUER_CFG_HANDLE;
-    Generic_torquerUart.isOpen = PORT_CLOSED;
-    Generic_torquerUart.baud = GENERIC_TORQUER_CFG_BAUDRATE_HZ;
-    status = uart_init_port(&Generic_torquerUart);
-    if (status == OS_SUCCESS)
-    {
-        printf("UART device %s configured with baudrate %d \n", Generic_torquerUart.deviceString, Generic_torquerUart.baud);
-    }
-    else
-    {
-        printf("UART device %s failed to initialize! \n", Generic_torquerUart.deviceString);
-        run_status = OS_ERROR;
-    }
+    // TODO - take from app side as it already exist
+
+    //Generic_torquerUart.deviceString = GENERIC_TORQUER_CFG_STRING;
+    //Generic_torquerUart.handle = GENERIC_TORQUER_CFG_HANDLE;
+    //Generic_torquerUart.isOpen = PORT_CLOSED;
+    //Generic_torquerUart.baud = GENERIC_TORQUER_CFG_BAUDRATE_HZ;
+    //status = uart_init_port(&Generic_torquerUart);
+    //if (status == OS_SUCCESS)
+    //{
+    //    printf("UART device %s configured with baudrate %d \n", Generic_torquerUart.deviceString, Generic_torquerUart.baud);
+    //}
+    //else
+    //{
+    //    printf("UART device %s failed to initialize! \n", Generic_torquerUart.deviceString);
+    //    run_status = OS_ERROR;
+    //}
 
     /* Main loop */
     print_help();
@@ -248,7 +192,8 @@ int main(int argc, char *argv[])
     }
 
     // Close the device 
-    uart_close_port(&Generic_torquerUart);
+    // TODO - close torquer device
+    //uart_close_port(&Generic_torquerUart);
 
     #ifdef _NOS_ENGINE_LINK_
         nos_destroy_link();

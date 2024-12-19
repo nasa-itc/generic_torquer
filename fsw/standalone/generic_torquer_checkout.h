@@ -48,8 +48,7 @@
 #define CMD_EXIT     1
 #define CMD_NOOP     2
 #define CMD_HK       3
-#define CMD_GENERIC_TORQUER   4
-#define CMD_CFG      5
+#define CMD_TORQUE   4
 
 /*
 ** Prototypes
