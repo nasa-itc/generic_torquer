@@ -43,6 +43,7 @@ if(${TGTNAME} STREQUAL cpu1)
     ../../../../fsw/apps/hwlib/sim/src/libcan.c
     ../../../../fsw/apps/hwlib/sim/src/libi2c.c
     ../../../../fsw/apps/hwlib/sim/src/libspi.c
+    ../../../../fsw/apps/hwlib/sim/src/libtrq.c
     ../../../../fsw/apps/hwlib/sim/src/nos_link.c
   )
   set(generic_torquer_checkout_libs
