@@ -36,7 +36,7 @@ add_cfe_coverage_test(generic_torquer ALL
     "coveragetest/coveragetest_generic_torquer_app.c"
     "../src/generic_torquer_app.c"
     "../../shared/generic_torquer_device.c"
-    "../../../../../fsw/apps/hwlib/fsw/stubs/libuart.c"
+    "../../../../../fsw/apps/hwlib/fsw/stubs/libtrq.c"
 )
 
 # The generic_torquer uses library functions provided by generic_torquer_lib so must be linked
