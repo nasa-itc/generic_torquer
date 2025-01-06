@@ -12,6 +12,7 @@
 ** Include Files
 */
 #include "cfe.h"
+#include "generic_torquer_device.h"
 #include "generic_torquer_events.h"
 #include "generic_torquer_platform_cfg.h"
 #include "generic_torquer_perfids.h"
@@ -25,14 +26,6 @@
 ** Specified pipe depth - how many messages will be queued in the pipe
 */
 #define GENERIC_TORQUER_PIPE_DEPTH            32
-
-
-/*
-** Enabled and Disabled Definitions
-*/
-#define GENERIC_TORQUER_DEVICE_DISABLED       0
-#define GENERIC_TORQUER_DEVICE_ENABLED        1
-
 
 /*
 ** GENERIC_TORQUER global data structure
@@ -87,9 +80,6 @@ void  GENERIC_TORQUER_ReportDeviceTelemetry(void);
 void  GENERIC_TORQUER_ResetCounters(void);
 void  GENERIC_TORQUER_Enable(void);
 void  GENERIC_TORQUER_Disable(void);
-int32 GENERIC_TORQUER_Config(uint8 num, uint8 percent, uint8 dir);
-int32 GENERIC_TORQUER_PercentOn(CFE_MSG_Message_t * msg);
-int32 GENERIC_TORQUER_AllPercentOn(CFE_MSG_Message_t * msg);
 int32 GENERIC_TORQUER_VerifyCmdLength(CFE_MSG_Message_t * msg, uint16 expected_length);
 
 #endif /* _GENERIC_TORQUER_APP_H_ */
