@@ -15,7 +15,7 @@
 ** Default GENERIC_TORQUER Configuration
 */
 #ifndef GENERIC_TORQUER_CFG
-#define GENERIC_TORQUER_CFG_PERIOD 50000000
+    #define GENERIC_TORQUER_CFG_PERIOD           50000000
 #endif
 
 #endif /* _GENERIC_TORQUER_PLATFORM_CFG_H_ */
