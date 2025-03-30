@@ -97,11 +97,11 @@ sleep(5)
 ##
 ## Device Config
 ##
-initial_command_count = tlm("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM CMD_COUNT")
+initial_command_count = tlm("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T CMD_COUNT")
 
-initial_error_count = tlm("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM CMD_ERR_COUNT")
+initial_error_count = tlm("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T CMD_ERR_COUNT")
 
-initial_device_error_count = tlm("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM DEVICE_ERR_COUNT")
+initial_device_error_count = tlm("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T DEVICE_ERR_COUNT")
 
 trq_num = ask "Enter Configuration Value (integer between 0 and 2):"
 
@@ -109,59 +109,72 @@ direction = ask "Enter Configuration Value (integer between 0 and 1):"
 
 percent = ask "Enter Configuration Value (integer between 0 and 100):"
 
-cmd("GENERIC_TORQUER GENERIC_TORQUER_PERCENT_ON_CC with TRQNUM #{trq_num} DIRECTION #{direction} PERCENT_ON #{percent}")
+cmd("GENERIC_TORQUER GENERIC_TORQUER_PERCENT_ON_CC with TRQNUM #{trq_num}, DIRECTION #{direction}, PERCENT_ON #{percent}")
 
-wait_check("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM CMD_COUNT > #{initial_command_count}", 30)
+wait_check("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T CMD_COUNT > #{initial_command_count}", 30)
 
-wait_check("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM CMD_ERR_COUNT == #{initial_error_count}", 30)
+wait_check("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T CMD_ERR_COUNT == #{initial_error_count}", 30)
 
-wait_check("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM DEVICE_ERR_COUNT == #{initial_device_error_count}", 30)
+wait_check("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T DEVICE_ERR_COUNT == #{initial_device_error_count}", 30)
 
 sleep(5)
 
-##
-## Data w/ Device
-##
+#
+# Configure and Data w/ Device
+#
 
-initial_error_count = tlm("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM CMD_ERR_COUNT")
-initial_device_error_count = tlm("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM DEVICE_ERR_COUNT")
+initial_error_count = tlm("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T CMD_ERR_COUNT")
+initial_device_error_count = tlm("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T DEVICE_ERR_COUNT")
 
 truth_42_wn_0_initial = tlm("SIM_42_TRUTH SIM_42_TRUTH_DATA W_0")
-truth_42_wn_1_initial = tlm("SIM_42_TRUTH SIM_42_TRUTH_DATA W_1")
-truth_42_wn_2_initial = tlm("SIM_42_TRUTH SIM_42_TRUTH_DATA W_2")
+trq_num0 = ask "Enter Configuration Value (integer between 0 and 2):"
+direction0 = ask "Enter Configuration Value (integer between 0 and 1):"
+percent0 = ask "Enter Configuration Value (integer between 0 and 100):"
+torque0 = ask "Enter Configuration Value (integer greater than 0):"
+cmd("GENERIC_TORQUER GENERIC_TORQUER_PERCENT_ON_CC with TRQNUM #{trq_num0}, DIRECTION #{direction0}, PERCENT_ON #{percent0}")
+cmd("GENERIC_REACTION_WHEEL GENERIC_RW_SET_TORQUE_CC with WHEEL_NUMBER #{trq_num0}, TORQUE #{torque0}")
+sleep(5)
+if direction0 == 0
+    wait_check("SIM_42_TRUTH SIM_42_TRUTH_DATA W_0 <= #{truth_42_wn_0_initial}")
+else
+    wait_check("SIM_42_TRUTH SIM_42_TRUTH_DATA W_0 >= #{truth_42_wn_0_initial}")
+end
+
+# truth_42_wn_1_initial = tlm("SIM_42_TRUTH SIM_42_TRUTH_DATA W_1")
+# truth_42_wn_2_initial = tlm("SIM_42_TRUTH SIM_42_TRUTH_DATA W_2")
  
-cmd("GENERIC_TORQUER GENERIC_TORQUER_PERCENT_ON_CC with TRQNUM #{trq_num}, DIRECTION #{direction}, PERCENT_ON #{percent}")
+# cmd("GENERIC_REACTION_WHEEL GENERIC_RW_SET_TORQUE_CC with WHEEL_NUMBER 0, TORQUE 1")
+
+# cmd("GENERIC_TORQUER GENERIC_TORQUER_PERCENT_ON_CC with TRQNUM #{trq_num}, DIRECTION #{direction}, PERCENT_ON #{percent}")
+# sleep(5)
+
+# if direction == 0
+#   wait_check("SIM_42_TRUTH SIM_42_TRUTH_DATA W_0 >= #{truth_42_wn_0_initial}")
+# else
+#   wait_check("SIM_42_TRUTH SIM_42_TRUTH_DATA W_0 <= #{truth_42_wn_0_initial}")
+
+# cmd("GENERIC_TORQUER GENERIC_TORQUER_PERCENT_ON_CC with TRQNUM #{trq_num}, DIRECTION #{direction}, PERCENT_ON #{percent}")
+# sleep(5)
+
+# if direction == 0
+#   wait_check("SIM_42_TRUTH SIM_42_TRUTH_DATA W_1 >= #{truth_42_wn_1_initial}")
+# else
+#   wait_check("SIM_42_TRUTH SIM_42_TRUTH_DATA W_1 <= #{truth_42_wn_1_initial}")
+
+# cmd("GENERIC_TORQUER GENERIC_TORQUER_PERCENT_ON_CC with TRQNUM #{trq_num}, DIRECTION #{direction}, PERCENT_ON #{percent}")
+# sleep(5)
+
+# if direction == 0
+#   wait_check("SIM_42_TRUTH SIM_42_TRUTH_DATA W_2 >= #{truth_42_wn_2_initial}")
+# else
+#   wait_check("SIM_42_TRUTH SIM_42_TRUTH_DATA W_2 <= #{truth_42_wn_2_initial}")
+
+# diff_margin = 0.025
+
+wait_check("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T CMD_ERR_COUNT == #{initial_error_count}", 30)
+wait_check("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T DEVICE_ERR_COUNT == #{initial_device_error_count}", 30)
+
 sleep(5)
-
-if direction == 0
-  wait_check("SIM_42_TRUTH SIM_42_TRUTH_DATA W_0 >= #{truth_42_wn_0_initial}")
-else
-  wait_check("SIM_42_TRUTH SIM_42_TRUTH_DATA W_0 <= #{truth_42_wn_0_initial}")
-
-cmd("GENERIC_TORQUER GENERIC_TORQUER_PERCENT_ON_CC with TRQNUM #{trq_num}, DIRECTION #{direction}, PERCENT_ON #{percent}")
-sleep(5)
-
-if direction == 0
-  wait_check("SIM_42_TRUTH SIM_42_TRUTH_DATA W_1 >= #{truth_42_wn_1_initial}")
-else
-  wait_check("SIM_42_TRUTH SIM_42_TRUTH_DATA W_1 <= #{truth_42_wn_1_initial}")
-
-cmd("GENERIC_TORQUER GENERIC_TORQUER_PERCENT_ON_CC with TRQNUM #{trq_num}, DIRECTION #{direction}, PERCENT_ON #{percent}")
-sleep(5)
-
-if direction == 0
-  wait_check("SIM_42_TRUTH SIM_42_TRUTH_DATA W_2 >= #{truth_42_wn_2_initial}")
-else
-  wait_check("SIM_42_TRUTH SIM_42_TRUTH_DATA W_2 <= #{truth_42_wn_2_initial}")
-
-diff_margin = 0.025
-
-wait_check("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM CMD_ERR_COUNT == #{initial_error_count}", 30)
-wait_check("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM DEVICE_ERR_COUNT == #{initial_device_error_count}", 30)
-
-sleep(5)
-
-
 
 ##
 ## Reset Counters
