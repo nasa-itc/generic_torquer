@@ -132,7 +132,7 @@ else
 end
 
 # Torquer 1
-truth_42_wn_1_initial = tlm("SIM_42_TRUTH SIM_42_TRUTH_DATA W_1")
+truth_42_wn_1_initial = tlm("SIM_42_TRUTH SIM_42_TRUTH_DATA WN_1")
 trq_num1 = ask "Enter Configuration Value (integer between 0 and 2):"
 direction1 = ask "Enter Configuration Value (integer between 0 and 1):"
 percent1 = ask "Enter Configuration Value (integer between 0 and 100):"
@@ -147,7 +147,7 @@ else
 end
 
 # Torquer 2
-truth_42_wn_2_initial = tlm("SIM_42_TRUTH SIM_42_TRUTH_DATA W_2")
+truth_42_wn_2_initial = tlm("SIM_42_TRUTH SIM_42_TRUTH_DATA WN_2")
 trq_num2 = ask "Enter Configuration Value (integer between 0 and 2):"
 direction2 = ask "Enter Configuration Value (integer between 0 and 1):"
 percent2 = ask "Enter Configuration Value (integer between 0 and 100):"
