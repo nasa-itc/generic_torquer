@@ -126,7 +126,7 @@ sleep(5)
 initial_error_count = tlm("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T CMD_ERR_COUNT")
 initial_device_error_count = tlm("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T DEVICE_ERR_COUNT")
 
-truth_42_wn_0_initial = tlm("SIM_42_TRUTH SIM_42_TRUTH_DATA W_0")
+truth_42_wn_0_initial = tlm("SIM_42_TRUTH SIM_42_TRUTH_DATA WN_0")
 trq_num0 = ask "Enter Configuration Value (integer between 0 and 2):"
 direction0 = ask "Enter Configuration Value (integer between 0 and 1):"
 percent0 = ask "Enter Configuration Value (integer between 0 and 100):"
