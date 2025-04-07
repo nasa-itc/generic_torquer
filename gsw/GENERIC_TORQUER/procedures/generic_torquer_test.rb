@@ -1,45 +1,51 @@
 require 'cosmos'
 require 'cosmos/script'
-require 'mission_lib.rb'
+require 'generic_torquer_lib.rb'
 
-class TORQUER_LPT < Cosmos::Test
+class GENERIC_TORQUER_Functional_Test < Cosmos::Test
   def setup
-    
+    safe_generic_torquer()
   end
 
-  def test_lpt
-    start("tests/generic_torquer_lpt_test.rb")
+  def test_application
+      start("tests/generic_torquer_app_test.rb")
+  end
+
+  def test_device
+    start("tests/generic_torquer_device_test.rb")
   end
 
   def teardown
-
+    safe_generic_torquer()
   end
 end
 
-class TORQUER_CPT < Cosmos::Test
-  def setup
-      
+class GENERIC_TORQUER_Automated_Scenario_Test < Cosmos::Test
+  def setup 
+    safe_generic_torquer()
   end
 
-  def test_cpt
-    start("tests/generic_torquer_cpt_test.rb")
+  def test_AST
+      start("tests/generic_torquer_ast_test.rb")
   end
 
   def teardown
-
+    safe_generic_torquer()
   end
 end
 
 class Generic_torquer_Test < Cosmos::TestSuite
   def initialize
       super()
-      add_test('TORQUER_CPT')
-      add_test('TORQUER_LPT')
+      add_test('GENERIC_TORQUER_Functional_Test')
+      add_test('GENERIC_TORQUER_Automated_Scenario_Test')
   end
 
   def setup
+    safe_generic_torquer()
   end
   
   def teardown
+    safe_generic_torquer()
   end
 end
