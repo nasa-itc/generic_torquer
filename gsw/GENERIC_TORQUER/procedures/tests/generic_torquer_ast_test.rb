@@ -18,11 +18,11 @@ GENERIC_TORQUER_TEST_LOOP_COUNT.times do |n|
     generic_torquer_prepare_ast()
 
     # Disable sim and confirm device error counts increase
-    dev_cmd_cnt = tlm("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM DEVICE_COUNT")
-    dev_cmd_err_cnt = tlm("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM DEVICE_ERR_COUNT")
+    dev_cmd_cnt = tlm("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T DEVICE_COUNT")
+    dev_cmd_err_cnt = tlm("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T DEVICE_ERR_COUNT")
     generic_torquer_sim_disable()
-    check("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM DEVICE_COUNT == #{dev_cmd_cnt}")
-    check("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM DEVICE_ERR_COUNT >= #{dev_cmd_err_cnt}")
+    check("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T DEVICE_COUNT == #{dev_cmd_cnt}")
+    check("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T DEVICE_ERR_COUNT >= #{dev_cmd_err_cnt}")
 
     # Enable sim and confirm return to nominal operation
     generic_torquer_sim_enable()
@@ -42,9 +42,9 @@ GENERIC_TORQUER_TEST_LOOP_COUNT.times do |n|
 
     # Confirm that status register and that app disabled itself
     get_generic_torquer_hk()
-    check("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM DEVICE_STATUS == 255")
+    check("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T DEVICE_STATUS == 255")
     get_generic_torquer_hk()
-    check("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM DEVICE_ENABLED == 'DISABLED'")
+    check("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T DEVICE_ENABLED == 'DISABLED'")
     
     # Clear simulator status fault
     generic_torquer_sim_set_status(0)
