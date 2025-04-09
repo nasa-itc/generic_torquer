@@ -328,7 +328,7 @@ void GENERIC_TORQUER_ProcessGroundCommand(void)
                     GENERIC_TORQUER_Percent_On_cmd_t *percent_cmd_ptr =
                         (GENERIC_TORQUER_Percent_On_cmd_t *)GENERIC_TORQUER_AppData.MsgPtr;
                     if (percent_cmd_ptr->TrqNum <= 2)
-                    {   
+                    {
                         GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandCount++;
                         status = GENERIC_TORQUER_Config(
                             &GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqInfo[percent_cmd_ptr->TrqNum],
