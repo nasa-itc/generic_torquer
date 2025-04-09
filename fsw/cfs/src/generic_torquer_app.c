@@ -328,15 +328,15 @@ void GENERIC_TORQUER_ProcessGroundCommand(void)
                     GENERIC_TORQUER_Percent_On_cmd_t *percent_cmd_ptr =
                         (GENERIC_TORQUER_Percent_On_cmd_t *)GENERIC_TORQUER_AppData.MsgPtr;
                     if (percent_cmd_ptr->TrqNum <= 2)
-                    {
+                    {   
+                        GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandCount++;
                         status = GENERIC_TORQUER_Config(
                             &GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqInfo[percent_cmd_ptr->TrqNum],
                             &GENERIC_TORQUER_AppData.trqDevice[percent_cmd_ptr->TrqNum], percent_cmd_ptr->PercentOn,
                             percent_cmd_ptr->Direction);
                         if (status == OS_SUCCESS)
                         {
-                            GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandCount++;
-                            //GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceCount++;
+                            GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceCount++;
                         }
                         else
                         {
@@ -364,6 +364,7 @@ void GENERIC_TORQUER_ProcessGroundCommand(void)
             {
                 if (GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled == GENERIC_TORQUER_DEVICE_ENABLED)
                 {
+                    GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandCount++;
                     GENERIC_TORQUER_All_Percent_On_cmd_t *all_percent_cmd_ptr =
                         (GENERIC_TORQUER_All_Percent_On_cmd_t *)GENERIC_TORQUER_AppData.MsgPtr;
                     status += GENERIC_TORQUER_Config(
@@ -377,9 +378,7 @@ void GENERIC_TORQUER_ProcessGroundCommand(void)
                         all_percent_cmd_ptr->Direction_2, all_percent_cmd_ptr->PercentOn_2);
                     if (status == OS_SUCCESS)
                     {
-                        //GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceCount++;
-                        GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandCount++;
-
+                        GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceCount++;
                     }
                     else
                     {
