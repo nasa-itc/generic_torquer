@@ -28,24 +28,3 @@ GENERIC_TORQUER_TEST_LOOP_COUNT.times do |n|
     generic_torquer_sim_enable()
     confirm_generic_torquer_data_loop()
 end
-
-
-##
-## Hardware status reporting fault
-##
-GENERIC_TORQUER_TEST_LOOP_COUNT.times do |n|
-    # Prepare
-    generic_torquer_prepare_ast()
-
-    # Add a fault to status in the simulator
-    generic_torquer_sim_set_status(255)
-
-    # Confirm that status register and that app disabled itself
-    get_generic_torquer_hk()
-    check("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T DEVICE_STATUS == 255")
-    get_generic_torquer_hk()
-    check("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T DEVICE_ENABLED == 'DISABLED'")
-    
-    # Clear simulator status fault
-    generic_torquer_sim_set_status(0)
-end

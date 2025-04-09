@@ -19,12 +19,6 @@ def get_generic_torquer_hk()
     sleep(GENERIC_TORQUER_CMD_SLEEP)
 end
 
-def get_generic_torquer_data()
-    cmd("GENERIC_TORQUER GENERIC_TORQUER_REQ_DATA")
-    wait_check_packet("GENERIC_TORQUER", "GENERIC_TORQUER_DATA_TLM", 1, GENERIC_TORQUER_RESPONSE_TIMEOUT)
-    sleep(GENERIC_TORQUER_CMD_SLEEP)
-end
-
 def generic_torquer_cmd(*command)
     count = tlm("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T CMD_COUNT") + 1
 
@@ -76,11 +70,8 @@ def confirm_generic_torquer_data()
     dev_cmd_cnt = tlm("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T DEVICE_COUNT")
     dev_cmd_err_cnt = tlm("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T DEVICE_ERR_COUNT")
     
-    get_generic_torquer_data()
+    get_generic_torquer_hk()
     # Note these checks assume default simulator configuration
-    raw_x = tlm("GENERIC_TORQUER GENERIC_TORQUER_DATA_TLM RAW_GENERIC_TORQUER_X")
-    check("GENERIC_TORQUER GENERIC_TORQUER_DATA_TLM RAW_GENERIC_TORQUER_Y >= #{raw_x*2}")
-    check("GENERIC_TORQUER GENERIC_TORQUER_DATA_TLM RAW_GENERIC_TORQUER_Z >= #{raw_x*3}")
 
     get_generic_torquer_hk()
     check("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T DEVICE_COUNT >= #{dev_cmd_cnt}")

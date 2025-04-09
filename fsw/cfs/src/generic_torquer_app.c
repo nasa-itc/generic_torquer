@@ -335,7 +335,8 @@ void GENERIC_TORQUER_ProcessGroundCommand(void)
                             percent_cmd_ptr->Direction);
                         if (status == OS_SUCCESS)
                         {
-                            GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceCount++;
+                            GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandCount++;
+                            //GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceCount++;
                         }
                         else
                         {
@@ -349,7 +350,7 @@ void GENERIC_TORQUER_ProcessGroundCommand(void)
                 }
                 else
                 {
-                    GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount++;
+                    GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandErrorCount++;
                 }
             }
             break;
@@ -376,7 +377,9 @@ void GENERIC_TORQUER_ProcessGroundCommand(void)
                         all_percent_cmd_ptr->Direction_2, all_percent_cmd_ptr->PercentOn_2);
                     if (status == OS_SUCCESS)
                     {
-                        GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceCount++;
+                        //GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceCount++;
+                        GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandCount++;
+
                     }
                     else
                     {
@@ -385,7 +388,7 @@ void GENERIC_TORQUER_ProcessGroundCommand(void)
                 }
                 else
                 {
-                    GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount++;
+                    GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandErrorCount++;
                 }
             }
             break;
