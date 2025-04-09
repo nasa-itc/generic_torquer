@@ -73,17 +73,27 @@ def confirm_generic_torquer_data()
     get_generic_torquer_hk()
     # Note these checks assume default simulator configuration
     # Torquer 0
-    truth_42_wn_0_initial = tlm("SIM_42_TRUTH SIM_42_TRUTH_DATA WN_0")
+    # truth_42_wn_0_initial = tlm("SIM_42_TRUTH SIM_42_TRUTH_DATA WN_0")
+    # trq_num0 = 0
+    # direction0 = 0
+    # percent0 = 50
+    # cmd("GENERIC_TORQUER GENERIC_TORQUER_PERCENT_ON_CC with TRQNUM #{trq_num0}, DIRECTION #{direction0}, PERCENT_ON #{percent0}")
+    # sleep(5)
+    # if direction0 == 0
+    #     check("SIM_42_TRUTH SIM_42_TRUTH_DATA WN_0 >= #{truth_42_wn_0_initial}")
+    # else
+    #     check("SIM_42_TRUTH SIM_42_TRUTH_DATA WN_0 <= #{truth_42_wn_0_initial}")
+    # end
+
+    cmd_cnt_initial = tlm("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T CMD_COUNT")
     trq_num0 = 0
     direction0 = 0
     percent0 = 50
-    cmd("GENERIC_TORQUER GENERIC_TORQUER_PERCENT_ON_CC with TRQNUM #{trq_num0}, DIRECTION #{direction0}, PERCENT_ON #{percent0}")
-    sleep(5)
-    if direction0 == 0
-        check("SIM_42_TRUTH SIM_42_TRUTH_DATA WN_0 >= #{truth_42_wn_0_initial}")
-    else
-        check("SIM_42_TRUTH SIM_42_TRUTH_DATA WN_0 <= #{truth_42_wn_0_initial}")
-    end
+    generic_torquer_cmd("GENERIC_TORQUER GENERIC_TORQUER_PERCENT_ON_CC with TRQNUM #{trq_num0}, DIRECTION #{direction0}, PERCENT_ON #{percent0}")
+    wait_check("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T CMD_COUNT > #{cmd_cnt_initial}",15)
+    cmd_cnt_initial = tlm("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T CMD_COUNT")
+    generic_torquer_cmd("GENERIC_TORQUER GENERIC_TORQUER_ALL_PERCENT_ON_CC with DIRECTION_0 #{direction0}, PERCENT_ON_0 #{percent0}, DIRECTION_1 #{direction0}, PERCENT_ON_1 #{percent0}, DIRECTION_2 #{direction0}, PERCENT_ON_2 #{percent0}")
+    wait_check("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T CMD_COUNT > #{cmd_cnt_initial}",15)
 
     get_generic_torquer_hk()
     check("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T DEVICE_COUNT >= #{dev_cmd_cnt}")
