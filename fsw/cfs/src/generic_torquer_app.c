@@ -497,7 +497,7 @@ void GENERIC_TORQUER_Enable(void)
     }
     else
     {
-        GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount++;
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandErrorCount++;
         CFE_EVS_SendEvent(GENERIC_TORQUER_ENABLE_ERR_EID, CFE_EVS_EventType_ERROR,
                           "GENERIC_TORQUER: Device enable failed, already enabled");
     }
@@ -527,7 +527,7 @@ void GENERIC_TORQUER_Disable(void)
     }
     else
     {
-        GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount++;
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandErrorCount++;
         CFE_EVS_SendEvent(GENERIC_TORQUER_DISABLE_ERR_EID, CFE_EVS_EventType_ERROR,
                           "GENERIC_TORQUER: Device disable failed, already disabled");
     }
