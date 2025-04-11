@@ -345,7 +345,7 @@ void GENERIC_TORQUER_ProcessGroundCommand(void)
                     }
                     else
                     {
-                        GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount++;
+                        GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandErrorCount++;
                     }
                 }
                 else
