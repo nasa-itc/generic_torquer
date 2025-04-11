@@ -71,20 +71,8 @@ def confirm_generic_torquer_data()
     dev_cmd_err_cnt = tlm("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T DEVICE_ERR_COUNT")
     
     get_generic_torquer_hk()
-    # Note these checks assume default simulator configuration
-    # Torquer 0
-    # truth_42_wn_0_initial = tlm("SIM_42_TRUTH SIM_42_TRUTH_DATA WN_0")
-    # trq_num0 = 0
-    # direction0 = 0
-    # percent0 = 50
-    # cmd("GENERIC_TORQUER GENERIC_TORQUER_PERCENT_ON_CC with TRQNUM #{trq_num0}, DIRECTION #{direction0}, PERCENT_ON #{percent0}")
-    # sleep(5)
-    # if direction0 == 0
-    #     check("SIM_42_TRUTH SIM_42_TRUTH_DATA WN_0 >= #{truth_42_wn_0_initial}")
-    # else
-    #     check("SIM_42_TRUTH SIM_42_TRUTH_DATA WN_0 <= #{truth_42_wn_0_initial}")
-    # end
-
+    #Note these checks assume default simulator configuration
+    
     cmd_cnt_initial = tlm("GENERIC_TORQUER GENERIC_TORQUER_HK_TLM_T CMD_COUNT")
     trq_num0 = 0
     direction0 = 0
