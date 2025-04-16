@@ -269,6 +269,7 @@ void GENERIC_TORQUER_ProcessGroundCommand(void)
             if (GENERIC_TORQUER_VerifyCmdLength(GENERIC_TORQUER_AppData.MsgPtr, sizeof(GENERIC_TORQUER_NoArgs_cmd_t)) ==
                 OS_SUCCESS)
             {
+                GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandCount++;
                 /* Second, send EVS event on successful receipt ground commands*/
                 CFE_EVS_SendEvent(GENERIC_TORQUER_CMD_NOOP_INF_EID, CFE_EVS_EventType_INFORMATION,
                                   "GENERIC_TORQUER: NOOP command received");
@@ -328,6 +329,7 @@ void GENERIC_TORQUER_ProcessGroundCommand(void)
                         (GENERIC_TORQUER_Percent_On_cmd_t *)GENERIC_TORQUER_AppData.MsgPtr;
                     if (percent_cmd_ptr->TrqNum <= 2)
                     {
+                        GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandCount++;
                         status = GENERIC_TORQUER_Config(
                             &GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqInfo[percent_cmd_ptr->TrqNum],
                             &GENERIC_TORQUER_AppData.trqDevice[percent_cmd_ptr->TrqNum], percent_cmd_ptr->PercentOn,
@@ -343,12 +345,12 @@ void GENERIC_TORQUER_ProcessGroundCommand(void)
                     }
                     else
                     {
-                        GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount++;
+                        GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandErrorCount++;
                     }
                 }
                 else
                 {
-                    GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount++;
+                    GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandErrorCount++;
                 }
             }
             break;
@@ -362,6 +364,7 @@ void GENERIC_TORQUER_ProcessGroundCommand(void)
             {
                 if (GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled == GENERIC_TORQUER_DEVICE_ENABLED)
                 {
+                    GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandCount++;
                     GENERIC_TORQUER_All_Percent_On_cmd_t *all_percent_cmd_ptr =
                         (GENERIC_TORQUER_All_Percent_On_cmd_t *)GENERIC_TORQUER_AppData.MsgPtr;
                     status += GENERIC_TORQUER_Config(
@@ -384,7 +387,7 @@ void GENERIC_TORQUER_ProcessGroundCommand(void)
                 }
                 else
                 {
-                    GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount++;
+                    GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandErrorCount++;
                 }
             }
             break;
@@ -469,6 +472,7 @@ void GENERIC_TORQUER_Enable(void)
     /* Check that device is disabled */
     if (GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled == GENERIC_TORQUER_DEVICE_DISABLED)
     {
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandCount++;
         /*
         ** Initialize hardware interface data
         */
@@ -495,7 +499,7 @@ void GENERIC_TORQUER_Enable(void)
     }
     else
     {
-        GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount++;
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandErrorCount++;
         CFE_EVS_SendEvent(GENERIC_TORQUER_ENABLE_ERR_EID, CFE_EVS_EventType_ERROR,
                           "GENERIC_TORQUER: Device enable failed, already enabled");
     }
@@ -510,6 +514,7 @@ void GENERIC_TORQUER_Disable(void)
     /* Check that device is enabled */
     if (GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled == GENERIC_TORQUER_DEVICE_ENABLED)
     {
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandCount++;
         for (uint8_t i = 0; i < 3; i++)
         {
             /* Set to zero  */
@@ -524,7 +529,7 @@ void GENERIC_TORQUER_Disable(void)
     }
     else
     {
-        GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceErrorCount++;
+        GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandErrorCount++;
         CFE_EVS_SendEvent(GENERIC_TORQUER_DISABLE_ERR_EID, CFE_EVS_EventType_ERROR,
                           "GENERIC_TORQUER: Device disable failed, already disabled");
     }
@@ -542,12 +547,7 @@ int32 GENERIC_TORQUER_VerifyCmdLength(CFE_MSG_Message_t *msg, uint16 expected_le
     size_t            actual_length = 0;
 
     CFE_MSG_GetSize(msg, &actual_length);
-    if (expected_length == actual_length)
-    {
-        /* Increment the command counter upon receipt of an invalid command */
-        GENERIC_TORQUER_AppData.HkTelemetryPkt.CommandCount++;
-    }
-    else
+    if (expected_length != actual_length)
     {
         CFE_MSG_GetMsgId(msg, &msg_id);
         CFE_MSG_GetFcnCode(msg, &cmd_code);
