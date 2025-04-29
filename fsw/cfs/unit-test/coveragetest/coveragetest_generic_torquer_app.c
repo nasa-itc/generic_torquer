@@ -528,18 +528,23 @@ void Test_GENERIC_TORQUER_ProcessGroundCommand(void)
     GENERIC_TORQUER_ProcessGroundCommand();
     UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER_CMD_CONFIG_ALL_INF_EID generated (%u)",
                   (unsigned int)EventTest.MatchCount);
-
-    GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_ENABLED;
+                  
+    TestMsg.Config.Direction = 1;
     TestMsg.Config.TrqNum = 3;
+    TestMsg.Config.PercentOn = 1;
     FcnCode = GENERIC_TORQUER_CONFIG_CC;
     Size    = sizeof(TestMsg.Config);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, Size, false);
     UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_CONFIG_INF_EID, NULL);
+    GENERIC_TORQUER_Percent_On_cmd_t command;
+    GENERIC_TORQUER_AppData.MsgPtr = (CFE_MSG_Message_t *)&command;
+    ((GENERIC_TORQUER_Percent_On_cmd_t *)GENERIC_TORQUER_AppData.MsgPtr)->TrqNum=3;
+    GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_ENABLED;
     GENERIC_TORQUER_ProcessGroundCommand();
     UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER_CMD_CONFIG_INF_EID generated (%u)",
-                  (unsigned int)EventTest.MatchCount);
+                    (unsigned int)EventTest.MatchCount);
 }
 
 void Test_GENERIC_TORQUER_ReportHousekeeping(void)
