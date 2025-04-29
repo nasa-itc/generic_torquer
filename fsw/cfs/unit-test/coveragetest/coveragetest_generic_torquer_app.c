@@ -260,6 +260,29 @@ void Test_GENERIC_TORQUER_AppInit(void)
     UT_TEST_FUNCTION_RC(GENERIC_TORQUER_AppInit(), CFE_SB_BAD_ARGUMENT);
 }
 
+void Test_GENERIC_TORQUER_ProcessTelemetryRequest(void)
+{
+    CFE_SB_MsgId_t    TestMsgId;
+    UT_CheckEvent_t   EventTest;
+    CFE_MSG_FcnCode_t FcnCode;
+    FcnCode = GENERIC_TORQUER_REQ_HK_TLM;
+
+    TestMsgId = CFE_SB_ValueToMsgId(GENERIC_TORQUER_REQ_HK_MID);
+    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
+    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
+    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_DEVICE_TLM_ERR_EID, NULL);
+    GENERIC_TORQUER_ProcessTelemetryRequest();
+    UtAssert_True(EventTest.MatchCount == 0, "GENERIC_TORQUER_DEVICE_TLM_ERR_EID generated (%u)",
+                  (unsigned int)EventTest.MatchCount);
+
+    FcnCode = 99;
+    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
+    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
+    GENERIC_TORQUER_ProcessTelemetryRequest();
+    UtAssert_True(EventTest.MatchCount == 0, "GENERIC_TORQUER_DEVICE_TLM_ERR_EID generated (%u)",
+                  (unsigned int)EventTest.MatchCount);
+}
+
 void Test_GENERIC_TORQUER_ProcessCommandPacket(void)
 {
     /*
@@ -615,6 +638,7 @@ void UtTest_Setup(void)
     ADD_TEST(GENERIC_TORQUER_AppInit);
     ADD_TEST(GENERIC_TORQUER_ProcessCommandPacket);
     ADD_TEST(GENERIC_TORQUER_ProcessGroundCommand);
+    ADD_TEST(GENERIC_TORQUER_ProcessTelemetryRequest);
     ADD_TEST(GENERIC_TORQUER_ReportHousekeeping);
     ADD_TEST(GENERIC_TORQUER_VerifyCmdLength);
 }
