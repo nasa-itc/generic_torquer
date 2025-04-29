@@ -126,7 +126,7 @@
         </xtce:IntegerArgumentType>
       </xtce:ArgumentTypeSet>
       <xtce:MetaCommandSet>
-        <xtce:MetaCommand name="GENERIC_TORQUER_SEND_HK_CC">
+        <xtce:MetaCommand name="GENERIC_TORQUER_REQ_HK_CC">
           <xtce:BaseMetaCommand metaCommandRef="/CCSDS/CCSDS_TC">
             <xtce:ArgumentAssignmentList>
               <xtce:ArgumentAssignment argumentName="CCSDS_STREAMID" argumentValue="6459"/>
@@ -134,7 +134,7 @@
             </xtce:ArgumentAssignmentList>
           </xtce:BaseMetaCommand>
           <xtce:ArgumentList/>
-          <xtce:CommandContainer name="GENERIC_TORQUER_GENERIC_TORQUER_SEND_HK_CC_CommandContainer">
+          <xtce:CommandContainer name="GENERIC_TORQUER_GENERIC_TORQUER_REQ_HK_CC_CommandContainer">
             <xtce:EntryList/>
           </xtce:CommandContainer>
         </xtce:MetaCommand>

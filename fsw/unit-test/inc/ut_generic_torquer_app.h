@@ -46,6 +46,6 @@
 /*
  * Allow UT access to the global "GENERIC_TORQUER_APP_Data" object.
  */
-//extern GENERIC_TORQUER_AppData_t GENERIC_TORQUER_APP_Data;
+// extern GENERIC_TORQUER_AppData_t GENERIC_TORQUER_APP_Data;
 
 #endif /* UT_GENERIC_TORQUER_APP_H */
