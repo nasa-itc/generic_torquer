@@ -452,8 +452,17 @@ void Test_GENERIC_TORQUER_ProcessGroundCommand(void)
     GENERIC_TORQUER_ProcessGroundCommand();
     UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER_CMD_CONFIG_INF_EID generated (%u)",
                   (unsigned int)EventTest.MatchCount);
-  
 
+    FcnCode = GENERIC_TORQUER_CONFIG_CC;
+    Size    = sizeof(TestMsg.Config);
+    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
+    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
+    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, sizeof(Size), false);
+    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CONFIG_CC, NULL);
+    UT_SetDeferredRetcode(UT_KEY(GENERIC_TORQUER_Config), 1, OS_ERROR);
+    CFE_MSG_Message_t msgPtrConfig;
+    GENERIC_TORQUER_AppData.MsgPtr = &msgPtrConfig;
+    GENERIC_TORQUER_ProcessGroundCommand();
 
     /* test dispatch of ENABLE */
     FcnCode = GENERIC_TORQUER_ENABLE_CC;
@@ -465,9 +474,7 @@ void Test_GENERIC_TORQUER_ProcessGroundCommand(void)
     GENERIC_TORQUER_ProcessGroundCommand();
     UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER_CMD_ENABLE_INF_EID generated (%u)",
                   (unsigned int)EventTest.MatchCount);
-
-
-
+                  
     GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_ENABLED;
     /* test dispatch of CONFIG_ALL */
     FcnCode = GENERIC_TORQUER_CONFIG_ALL_CC;
@@ -503,6 +510,31 @@ void Test_GENERIC_TORQUER_ProcessGroundCommand(void)
     GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_DISABLED;
     GENERIC_TORQUER_ProcessGroundCommand();
     UtAssert_True(EventTest.MatchCount == 0, "GENERIC_TORQUER_CMD_CONFIG_ALL_INF_EID generated (%u)",
+                  (unsigned int)EventTest.MatchCount);
+}
+
+void Test_GENERIC_TORQUER_Enable(void)
+{
+    UT_CheckEvent_t EventTest;
+
+    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_ENABLE_INF_EID, NULL);
+    GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_DISABLED;
+    UT_SetDeferredRetcode(UT_KEY(trq_command), 1, OS_SUCCESS);
+    GENERIC_TORQUER_Enable();
+    UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER: Device enabled (%u)", (unsigned int)EventTest.MatchCount);
+
+    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_INIT_ERR_EID, NULL);
+    GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_DISABLED;
+    UT_SetDeferredRetcode(UT_KEY(trq_command), 1, OS_ERROR);
+    GENERIC_TORQUER_Enable();
+    UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER: UART port initialization error (%u)",
+                  (unsigned int)EventTest.MatchCount);
+
+    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_ENABLE_ERR_EID, NULL);
+    GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_ENABLED;
+    UT_SetDeferredRetcode(UT_KEY(trq_command), 1, OS_ERROR);
+    GENERIC_TORQUER_Enable();
+    UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER: Device enable failed, already enabled (%u)",
                   (unsigned int)EventTest.MatchCount);
 }
 
