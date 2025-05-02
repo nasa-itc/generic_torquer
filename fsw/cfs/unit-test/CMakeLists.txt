@@ -18,6 +18,11 @@
 #    code units.
 #
  
+
+add_cfe_coverage_stubs(generic_torquer-internal stubs/generic_torquer_device_stubs.c stubs/libtrq_stubs.c) 
+target_link_libraries(coverage-generic_torquer-internal-stubs ut_core_api_stubs ut_assert)
+target_include_directories(coverage-generic_torquer-internal-stubs PUBLIC $<TARGET_PROPERTY:generic_torquer,INCLUDE_DIRECTORIES>)
+
 # Use the UT assert public API, and allow direct
 # inclusion of source files that are normally private
 include_directories(${PROJECT_SOURCE_DIR}/fsw/src)
@@ -35,7 +40,7 @@ include_directories(${hwlib_MISSION_DIR}/fsw/public_inc)
 add_cfe_coverage_test(generic_torquer ALL 
     "coveragetest/coveragetest_generic_torquer_app.c"
     "../src/generic_torquer_app.c"
-    "../../shared/generic_torquer_device.c"
+    #"../../shared/generic_torquer_device.c"
     "../../../../../fsw/apps/hwlib/fsw/stubs/libtrq.c"
 )
 

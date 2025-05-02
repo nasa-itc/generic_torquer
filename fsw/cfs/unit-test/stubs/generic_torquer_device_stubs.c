@@ -14,6 +14,7 @@
  */
 
 #include "generic_torquer_device.h"
+#include "libtrq.h"
 #include "utgenstub.h"
 
 /*
