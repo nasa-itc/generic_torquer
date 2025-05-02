@@ -1,11 +1,10 @@
 /*******************************************************************************
-** File: generic_torquer_device.h
+** File: generic_torquer_device_stubs.c
 **
 ** Purpose:
 **   This is the header file for the GENERIC_TORQUER device.
 **
 *******************************************************************************/
-#define _GENERIC_TORQUER_DEVICE_H_
 
 /**
  * @file
@@ -13,6 +12,7 @@
  * Auto-Generated stub implementations for functions defined in generic_torquer_device header
  */
 
+/* Use properly scoped include paths that will work with the build system */
 #include "generic_torquer_device.h"
 #include "libtrq.h"
 #include "utgenstub.h"

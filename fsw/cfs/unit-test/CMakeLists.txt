@@ -28,6 +28,8 @@ target_include_directories(coverage-generic_torquer-internal-stubs PUBLIC $<TARG
 include_directories(${PROJECT_SOURCE_DIR}/fsw/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc)
 include_directories(${hwlib_MISSION_DIR}/fsw/public_inc)
+include_directories(${PROJECT_SOURCE_DIR}/fsw/shared)
+
 
 
 # Add a coverage test executable called "generic_torquer-ALL" that 
@@ -40,9 +42,12 @@ include_directories(${hwlib_MISSION_DIR}/fsw/public_inc)
 add_cfe_coverage_test(generic_torquer ALL 
     "coveragetest/coveragetest_generic_torquer_app.c"
     "../src/generic_torquer_app.c"
-    #"../../shared/generic_torquer_device.c"
-    "../../../../../fsw/apps/hwlib/fsw/stubs/libtrq.c"
+    #"stubs/generic_torquer_device_stubs.c"
+    #"stubs/libtrq_stubs.c"
 )
+
+# Link with our generated stubs - this MUST be before the coverage-generic_torquer dependency
+target_link_libraries(coverage-generic_torquer-ALL-testrunner coverage-generic_torquer-internal-stubs)
 
 # The generic_torquer uses library functions provided by generic_torquer_lib so must be linked
 # with the generic_torquer_lib stub library (this is mainly just an example of how this 

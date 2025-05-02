@@ -1,5 +1,5 @@
 /* Copyright (C) 2009 - 2020 National Aeronautics and Space Administration. All Foreign Rights are Reserved to the U.S.
-Government.
+Government. */
 
 /**
  * @file
