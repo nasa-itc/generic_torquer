@@ -542,17 +542,7 @@ void Test_GENERIC_TORQUER_ProcessGroundCommand(void)
 
 
     
-    // /* test dispatch of ENABLE */
-    // FcnCode = GENERIC_TORQUER_ENABLE_CC;
-    // Size    = sizeof(TestMsg.Enable);
-    // UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
-    // UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
-    // UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, sizeof(Size), false);
-    // UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_ENABLE_INF_EID, NULL);
-    // GENERIC_TORQUER_ProcessGroundCommand();
-    // UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER_CMD_ENABLE_INF_EID generated (%u)",
-    //               (unsigned int)EventTest.MatchCount);
-                  
+   
 
     // Hits line 390                  
     // FcnCode = GENERIC_TORQUER_CONFIG_ALL_CC;
@@ -567,6 +557,32 @@ void Test_GENERIC_TORQUER_ProcessGroundCommand(void)
     // GENERIC_TORQUER_ProcessGroundCommand();
     // UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER_CMD_CONFIG_ALL_INF_EID generated (%u)",
     //               (unsigned int)EventTest.MatchCount);
+
+     /* test dispatch of ENABLE */
+    FcnCode = GENERIC_TORQUER_ENABLE_CC;
+    Size    = sizeof(TestMsg.Enable);
+    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
+    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
+    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, sizeof(Size), false);
+    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_ENABLE_INF_EID, NULL);
+    GENERIC_TORQUER_ProcessGroundCommand();
+    UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER_CMD_ENABLE_INF_EID generated (%u)",
+                  (unsigned int)EventTest.MatchCount);
+                  
+
+     /* test dispatch of PERCENT_ON command error*/
+     FcnCode = GENERIC_TORQUER_CONFIG_CC;
+     Size    = sizeof(TestMsg.Config);
+     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
+     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
+     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, Size, false);
+     UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_CONFIG_INF_EID, NULL);
+     GENERIC_TORQUER_Percent_On_cmd_t command6;
+     GENERIC_TORQUER_AppData.MsgPtr = (CFE_MSG_Message_t *)&command6;
+     ((GENERIC_TORQUER_Percent_On_cmd_t *)GENERIC_TORQUER_AppData.MsgPtr)->TrqNum=3;
+     GENERIC_TORQUER_ProcessGroundCommand();
+     UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER_CMD_CONFIG_INF_EID generated (%u)",
+                   (unsigned int)EventTest.MatchCount);
 }
 
 void Test_GENERIC_TORQUER_Enable(void)
