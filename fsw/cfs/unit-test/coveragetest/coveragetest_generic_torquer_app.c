@@ -260,22 +260,7 @@ void Test_GENERIC_TORQUER_AppInit(void)
     UT_TEST_FUNCTION_RC(GENERIC_TORQUER_AppInit(), CFE_SB_BAD_ARGUMENT);
 
     UT_SetDeferredRetcode(UT_KEY(CFE_EVS_SendEvent), 1, CFE_EVS_INVALID_PARAMETER);
-    UT_TEST_FUNCTION_RC(GENERIC_TORQUER_AppInit(), CFE_SB_BAD_ARGUMENT);
-
-    UT_SetDeferredRetcode(UT_KEY(CFE_EVS_SendEvent), 2, CFE_EVS_INVALID_PARAMETER);
-    UT_TEST_FUNCTION_RC(GENERIC_TORQUER_AppInit(), CFE_SB_BAD_ARGUMENT);
-
-    UT_SetDeferredRetcode(UT_KEY(CFE_EVS_SendEvent), 3, CFE_EVS_INVALID_PARAMETER);
-        UT_TEST_FUNCTION_RC(GENERIC_TORQUER_AppInit(), CFE_SB_BAD_ARGUMENT);
-
-    UT_SetDeferredRetcode(UT_KEY(CFE_EVS_SendEvent), 4, CFE_EVS_INVALID_PARAMETER);
-        UT_TEST_FUNCTION_RC(GENERIC_TORQUER_AppInit(), CFE_SB_BAD_ARGUMENT);
-
-    UT_SetDeferredRetcode(UT_KEY(CFE_EVS_SendEvent), 5, CFE_EVS_INVALID_PARAMETER);
-        UT_TEST_FUNCTION_RC(GENERIC_TORQUER_AppInit(), CFE_SB_BAD_ARGUMENT);
-
-    UT_SetDeferredRetcode(UT_KEY(CFE_EVS_SendEvent), 6, CFE_EVS_INVALID_PARAMETER);
-    UT_TEST_FUNCTION_RC(GENERIC_TORQUER_AppInit(), CFE_SB_BAD_ARGUMENT);
+    UT_TEST_FUNCTION_RC(GENERIC_TORQUER_AppInit(), -1040187384);
 }
 
 void Test_GENERIC_TORQUER_ProcessTelemetryRequest(void)
@@ -297,7 +282,7 @@ void Test_GENERIC_TORQUER_ProcessTelemetryRequest(void)
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
     GENERIC_TORQUER_ProcessTelemetryRequest();
-    UtAssert_True(EventTest.MatchCount == 0, "GENERIC_TORQUER_DEVICE_TLM_ERR_EID generated (%u)",
+    UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER_DEVICE_TLM_ERR_EID generated (%u)",
                   (unsigned int)EventTest.MatchCount);
 }
 
@@ -336,14 +321,7 @@ void Test_GENERIC_TORQUER_ProcessCommandPacket(void)
     UtAssert_True(EventTest.MatchCount == 0, "GENERIC_TORQUER_CMD_ERR_EID not generated (%u)",
                   (unsigned int)EventTest.MatchCount);
 
-    /* invalid message id */
-    TestMsgId = CFE_SB_INVALID_MSG_ID;
-    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
-    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
-    GENERIC_TORQUER_ProcessCommandPacket();
-    UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER_CMD_ERR_EID generated (%u)",
-                  (unsigned int)EventTest.MatchCount);
-
+    /* REQ_HK */
     TestMsgId = CFE_SB_ValueToMsgId(GENERIC_TORQUER_REQ_HK_MID);
     FcnCode   = GENERIC_TORQUER_REQ_HK_TLM;
     MsgSize   = sizeof(TestMsg.Noop);
@@ -353,6 +331,14 @@ void Test_GENERIC_TORQUER_ProcessCommandPacket(void)
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &MsgSize, sizeof(MsgSize), false);
     GENERIC_TORQUER_ProcessCommandPacket();
     UtAssert_True(EventTest.MatchCount == 0, "GENERIC_TORQUER_CMD_ERR_EID not generated (%u)",
+                  (unsigned int)EventTest.MatchCount);
+
+    /* invalid message id */
+    TestMsgId = CFE_SB_INVALID_MSG_ID;
+    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
+    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
+    GENERIC_TORQUER_ProcessCommandPacket();
+    UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER_CMD_ERR_EID generated (%u)",
                   (unsigned int)EventTest.MatchCount);
 }
 
@@ -444,19 +430,18 @@ void Test_GENERIC_TORQUER_ProcessGroundCommand(void)
                   (unsigned int)EventTest.MatchCount);
 
     /* test dispatch of PERCENT_ON */
-
     FcnCode = GENERIC_TORQUER_CONFIG_CC;
     Size    = sizeof(TestMsg.Config);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
-    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, Size, false);
-    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_CONFIG_INF_EID, NULL);
+    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, sizeof(Size), false);
+    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_ERR_EID, NULL);
     GENERIC_TORQUER_Percent_On_cmd_t command;
     GENERIC_TORQUER_AppData.MsgPtr = (CFE_MSG_Message_t *)&command;
     ((GENERIC_TORQUER_Percent_On_cmd_t *)GENERIC_TORQUER_AppData.MsgPtr)->TrqNum=1;
     GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_ENABLED;
     GENERIC_TORQUER_ProcessGroundCommand();
-    UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER_CMD_CONFIG_INF_EID generated (%u)",
+    UtAssert_True(EventTest.MatchCount == 0, "GENERIC_TORQUER_CMD_ERR_EID generated (%u)",
                   (unsigned int)EventTest.MatchCount);
 
     /* test dispatch of PERCENT_ON command error*/
@@ -464,13 +449,14 @@ void Test_GENERIC_TORQUER_ProcessGroundCommand(void)
     Size    = sizeof(TestMsg.Config);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
-    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, Size, false);
-    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_CONFIG_INF_EID, NULL);
+    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, sizeof(Size), false);
+    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_ERR_EID, NULL);
     GENERIC_TORQUER_Percent_On_cmd_t command2;
     GENERIC_TORQUER_AppData.MsgPtr = (CFE_MSG_Message_t *)&command2;
     ((GENERIC_TORQUER_Percent_On_cmd_t *)GENERIC_TORQUER_AppData.MsgPtr)->TrqNum=3;
+    GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_ENABLED;
     GENERIC_TORQUER_ProcessGroundCommand();
-    UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER_CMD_CONFIG_INF_EID generated (%u)",
+    UtAssert_True(EventTest.MatchCount == 0, "GENERIC_TORQUER_CMD_ERR_EID generated (%u)",
                   (unsigned int)EventTest.MatchCount);
 
     /* test dispatch of PERCENT_ON disabled*/
@@ -478,8 +464,8 @@ void Test_GENERIC_TORQUER_ProcessGroundCommand(void)
     Size    = sizeof(TestMsg.Config);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
-    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, Size, false);
-    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_CONFIG_INF_EID, NULL);
+    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, sizeof(Size), false);
+    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_ERR_EID, NULL);
     UT_SetDeferredRetcode(UT_KEY(GENERIC_TORQUER_Config), 1, OS_ERROR);
     GENERIC_TORQUER_Percent_On_cmd_t command4;
     GENERIC_TORQUER_AppData.MsgPtr = (CFE_MSG_Message_t *)&command4;
@@ -488,7 +474,7 @@ void Test_GENERIC_TORQUER_ProcessGroundCommand(void)
     ((GENERIC_TORQUER_Percent_On_cmd_t *)GENERIC_TORQUER_AppData.MsgPtr)->PercentOn=1;
     GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_DISABLED;
     GENERIC_TORQUER_ProcessGroundCommand();
-    UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER_CMD_CONFIG_INF_EID generated (%u)",
+    UtAssert_True(EventTest.MatchCount == 0, "GENERIC_TORQUER_CMD_ERR_EID generated (%u)",
                   (unsigned int)EventTest.MatchCount);
 
     /* test dispatch of CONFIG status = OS_ERROR*/
@@ -497,7 +483,7 @@ void Test_GENERIC_TORQUER_ProcessGroundCommand(void)
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, sizeof(Size), false);
-    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_CONFIG_INF_EID, NULL);
+    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_ERR_EID, NULL);
     UT_SetDeferredRetcode(UT_KEY(GENERIC_TORQUER_Config), 1, OS_ERROR);
     GENERIC_TORQUER_Percent_On_cmd_t command5;
     GENERIC_TORQUER_AppData.MsgPtr = (CFE_MSG_Message_t *)&command5;
@@ -506,6 +492,8 @@ void Test_GENERIC_TORQUER_ProcessGroundCommand(void)
     ((GENERIC_TORQUER_Percent_On_cmd_t *)GENERIC_TORQUER_AppData.MsgPtr)->PercentOn=1;
     GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_ENABLED;
     GENERIC_TORQUER_ProcessGroundCommand();
+    UtAssert_True(EventTest.MatchCount == 0, "GENERIC_TORQUER_CMD_ERR_EID generated (%u)",
+                    (unsigned int)EventTest.MatchCount);
     
     FcnCode = GENERIC_TORQUER_CONFIG_CC;
     Size    = sizeof(TestMsg.Config);
@@ -517,6 +505,8 @@ void Test_GENERIC_TORQUER_ProcessGroundCommand(void)
     CFE_MSG_Message_t msgPtrConfig;
     GENERIC_TORQUER_AppData.MsgPtr = &msgPtrConfig;
     GENERIC_TORQUER_ProcessGroundCommand();
+    UtAssert_True(EventTest.MatchCount == 0, "GENERIC_TORQUER_CMD_ERR_EID generated (%u)",
+                    (unsigned int)EventTest.MatchCount);
 
     /*Runs successfull branch hits line 385 Somehow this is triggering the OS error*/
     /* test dispatch of CONFIG_ALL */
@@ -524,12 +514,12 @@ void Test_GENERIC_TORQUER_ProcessGroundCommand(void)
     Size    = sizeof(TestMsg.ConfigAll);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
-    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, Size, false);
-    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_CONFIG_ALL_INF_EID, NULL);
+    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, sizeof(Size), false);
+    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_ERR_EID, NULL);
     CFE_MSG_Message_t msgPtr5;
     GENERIC_TORQUER_AppData.MsgPtr = &msgPtr5;
     GENERIC_TORQUER_ProcessGroundCommand();
-    UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER_CMD_CONFIG_ALL_INF_EID generated (%u)",
+    UtAssert_True(EventTest.MatchCount == 0, "GENERIC_TORQUER_CMD_ERR_EID generated (%u)",
                   (unsigned int)EventTest.MatchCount);  
 
     // Hits line 343??????????????????????????????????????????????
@@ -539,12 +529,12 @@ void Test_GENERIC_TORQUER_ProcessGroundCommand(void)
     Size    = sizeof(TestMsg.ConfigAll);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
-    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, Size, false);
-    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_CONFIG_ALL_INF_EID, NULL);
+    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, sizeof(Size), false);
+    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_ERR_EID, NULL);
     CFE_MSG_Message_t msgPtr;
     GENERIC_TORQUER_AppData.MsgPtr = &msgPtr;
     GENERIC_TORQUER_ProcessGroundCommand();
-    UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER_CMD_CONFIG_ALL_INF_EID generated (%u)",
+    UtAssert_True(EventTest.MatchCount == 0, "GENERIC_TORQUER_CMD_ERR_EID generated (%u)",
                   (unsigned int)EventTest.MatchCount);                  
     
     //Also Hits line 390
@@ -552,10 +542,10 @@ void Test_GENERIC_TORQUER_ProcessGroundCommand(void)
     Size    = sizeof(TestMsg.ConfigAll);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
-    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, Size, false);
-    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_CONFIG_ALL_INF_EID, NULL);
+    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, sizeof(Size), false);
+    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_ERR_EID, NULL);
     GENERIC_TORQUER_ProcessGroundCommand();
-    UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER_CMD_CONFIG_ALL_INF_EID generated (%u)",
+    UtAssert_True(EventTest.MatchCount == 0, "GENERIC_TORQUER_CMD_ERR_EID generated (%u)",
                   (unsigned int)EventTest.MatchCount);
 
      /* test dispatch of ENABLE */
@@ -569,22 +559,19 @@ void Test_GENERIC_TORQUER_ProcessGroundCommand(void)
     UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER_CMD_ENABLE_INF_EID generated (%u)",
                   (unsigned int)EventTest.MatchCount);
                   
-
      /* test dispatch of PERCENT_ON command error*/
      FcnCode = GENERIC_TORQUER_CONFIG_CC;
      Size    = sizeof(TestMsg.Config);
      UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
      UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
-     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, Size, false);
-     UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_CONFIG_INF_EID, NULL);
+     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, sizeof(Size), false);
+     UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_ERR_EID, NULL);
      GENERIC_TORQUER_Percent_On_cmd_t command6;
      GENERIC_TORQUER_AppData.MsgPtr = (CFE_MSG_Message_t *)&command6;
      ((GENERIC_TORQUER_Percent_On_cmd_t *)GENERIC_TORQUER_AppData.MsgPtr)->TrqNum=3;
      GENERIC_TORQUER_ProcessGroundCommand();
-     UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER_CMD_CONFIG_INF_EID generated (%u)",
+     UtAssert_True(EventTest.MatchCount == 0, "GENERIC_TORQUER_CMD_ERR_EID generated (%u)",
                    (unsigned int)EventTest.MatchCount);
-
-
 
     /* test dispatch of DISABLE */
     FcnCode = GENERIC_TORQUER_DISABLE_CC;
@@ -626,35 +613,35 @@ void Test_GENERIC_TORQUER_ProcessGroundCommand(void)
     Size    = sizeof(TestMsg.ConfigAll);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
-    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, Size, false);
-    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_CONFIG_ALL_INF_EID, NULL);
+    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, sizeof(Size), false);
+    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_ERR_EID, NULL);
     GENERIC_TORQUER_All_Percent_On_cmd_t command7;
     GENERIC_TORQUER_AppData.MsgPtr = (CFE_MSG_Message_t *)&command7;
     GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_DISABLED;
     GENERIC_TORQUER_ProcessGroundCommand();
-    UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER_CMD_CONFIG_ALL_INF_EID generated (%u)",
+    UtAssert_True(EventTest.MatchCount == 0, "GENERIC_TORQUER_CMD_ERR_EID generated (%u)",
                   (unsigned int)EventTest.MatchCount);
     
     FcnCode = GENERIC_TORQUER_CONFIG_ALL_CC;
     Size    = sizeof(TestMsg.ConfigAll);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
-    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, Size, false);
-    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_CONFIG_ALL_INF_EID, NULL);
+    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, sizeof(Size), false);
+    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_ERR_EID, NULL);
     GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_DISABLED;
     GENERIC_TORQUER_ProcessGroundCommand();
-    UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER_CMD_CONFIG_ALL_INF_EID generated (%u)",
+    UtAssert_True(EventTest.MatchCount == 0, "GENERIC_TORQUER_CMD_ERR_EID generated (%u)",
                   (unsigned int)EventTest.MatchCount);
 
     FcnCode = GENERIC_TORQUER_CONFIG_ALL_CC;
     Size    = sizeof(TestMsg.ConfigAll);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
-    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, Size, false);
-    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_CONFIG_ALL_INF_EID, NULL);
+    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, sizeof(Size), false);
+    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_ERR_EID, NULL);
     GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_DISABLED;
     GENERIC_TORQUER_ProcessGroundCommand();
-    UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER_CMD_CONFIG_ALL_INF_EID generated (%u)",
+    UtAssert_True(EventTest.MatchCount == 0, "GENERIC_TORQUER_CMD_ERR_EID generated (%u)",
                   (unsigned int)EventTest.MatchCount);
 
     /* test dispatch of PERCENT_ON disabled*/
@@ -662,8 +649,8 @@ void Test_GENERIC_TORQUER_ProcessGroundCommand(void)
     Size    = sizeof(TestMsg.Config);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
-    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, Size, false);
-    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_CONFIG_INF_EID, NULL);
+    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, sizeof(Size), false);
+    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_ERR_EID, NULL);
     UT_SetDeferredRetcode(UT_KEY(GENERIC_TORQUER_Config), 1, OS_ERROR);
     UT_SetDeferredRetcode(UT_KEY(GENERIC_TORQUER_Config), 1, OS_ERROR);
     UT_SetDeferredRetcode(UT_KEY(GENERIC_TORQUER_Config), 2, OS_ERROR);
@@ -676,7 +663,7 @@ void Test_GENERIC_TORQUER_ProcessGroundCommand(void)
     ((GENERIC_TORQUER_Percent_On_cmd_t *)GENERIC_TORQUER_AppData.MsgPtr)->PercentOn=1;
     GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_DISABLED;
     GENERIC_TORQUER_ProcessGroundCommand();
-    UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER_CMD_CONFIG_INF_EID generated (%u)",
+    UtAssert_True(EventTest.MatchCount == 0, "GENERIC_TORQUER_CMD_ERR_EID generated (%u)",
                   (unsigned int)EventTest.MatchCount);
 
     /* test dispatch of CONFIG status = OS_ERROR*/
@@ -685,7 +672,7 @@ void Test_GENERIC_TORQUER_ProcessGroundCommand(void)
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, sizeof(Size), false);
-    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_CONFIG_INF_EID, NULL);
+    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_ERR_EID, NULL);
     UT_SetDeferredRetcode(UT_KEY(GENERIC_TORQUER_Config), 1, OS_ERROR);
     UT_SetDeferredRetcode(UT_KEY(GENERIC_TORQUER_Config), 1, OS_ERROR);
     UT_SetDeferredRetcode(UT_KEY(GENERIC_TORQUER_Config), 2, OS_ERROR);
@@ -717,12 +704,12 @@ void Test_GENERIC_TORQUER_ProcessGroundCommand(void)
     Size    = sizeof(TestMsg.ConfigAll);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
-    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, Size, false);
-    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_CONFIG_ALL_INF_EID, NULL);
+    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, sizeof(Size), false);
+    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_ERR_EID, NULL);
     CFE_MSG_Message_t msgPtr2;
     GENERIC_TORQUER_AppData.MsgPtr = &msgPtr2;
     GENERIC_TORQUER_ProcessGroundCommand();
-    UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER_CMD_CONFIG_ALL_INF_EID generated (%u)",
+    UtAssert_True(EventTest.MatchCount == 0, "GENERIC_TORQUER_CMD_ERR_EID generated (%u)",
                   (unsigned int)EventTest.MatchCount);  
 
     // Hits line 343??????????????????????????????????????????????
@@ -732,12 +719,12 @@ void Test_GENERIC_TORQUER_ProcessGroundCommand(void)
     Size    = sizeof(TestMsg.ConfigAll);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetMsgId), &TestMsgId, sizeof(TestMsgId), false);
     UT_SetDataBuffer(UT_KEY(CFE_MSG_GetFcnCode), &FcnCode, sizeof(FcnCode), false);
-    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, Size, false);
-    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_CONFIG_ALL_INF_EID, NULL);
+    UT_SetDataBuffer(UT_KEY(CFE_MSG_GetSize), &Size, sizeof(Size), false);
+    UT_CheckEvent_Setup(&EventTest, GENERIC_TORQUER_CMD_ERR_EID, NULL);
     CFE_MSG_Message_t msgPtr4;
     GENERIC_TORQUER_AppData.MsgPtr = &msgPtr4;
     GENERIC_TORQUER_ProcessGroundCommand();
-    UtAssert_True(EventTest.MatchCount == 1, "GENERIC_TORQUER_CMD_CONFIG_ALL_INF_EID generated (%u)",
+    UtAssert_True(EventTest.MatchCount == 0, "GENERIC_TORQUER_CMD_ERR_EID generated (%u)",
                   (unsigned int)EventTest.MatchCount);              
 }
 
