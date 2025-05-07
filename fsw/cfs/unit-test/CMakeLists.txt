@@ -42,7 +42,11 @@ include_directories(${PROJECT_SOURCE_DIR}/../../../../fsw/osal/src/unit-test-cov
 add_cfe_coverage_test(generic_torquer ALL 
     "coveragetest/coveragetest_generic_torquer_app.c"
     "../src/generic_torquer_app.c"
+    "../../shared/generic_torquer_device.c"
 )
+
+target_link_libraries(coverage-generic_torquer-ALL-testrunner coverage-generic_torquer-internal-stubs)
+add_cfe_coverage_dependency(generic_torquer ALL generic_torquer-internal)
 
 add_cfe_coverage_test(generic_torquer DEVICE 
     "coveragetest/coveragetest_generic_torquer_device.c"
