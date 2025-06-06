@@ -9,18 +9,6 @@
 #include <Fw/Logger/Logger.hpp>
 #include "FpConfig.hpp"
 
-extern "C"{
-#include "generic_torquer_device.h"
-#include "libtrq.h"
-}
-
-#include "nos_link.h"
-
-trq_info_t trqDevice;
-GENERIC_TORQUER_Device_tlm_t trqHk;
-
-
-
 
 namespace Components {
 
@@ -30,7 +18,7 @@ namespace Components {
 
   Generic_torquer ::
     Generic_torquer(const char* const compName) :
-      Generic_torquerComponentBase(compName), m_greetingCount(0)
+      Generic_torquerComponentBase(compName)
 
   {
     int32_t status = OS_SUCCESS;
@@ -38,32 +26,47 @@ namespace Components {
     nos_init_link();
     
     /* Open device specific protocols */
-    trqHk.Direction = 0;
-    trqHk.PercentOn = 0;
     
-    trqDevice.trq_num = 0;
-    trqDevice.timer_period_ns = GENERIC_TORQUER_CFG_PERIOD;
-    trqDevice.timerfd = 0;
-    trqDevice.direction_pin_fd = 0;
-    trqDevice.timer_high_ns = 0;
-    trqDevice.positive_direction = false;
-    trqDevice.enabled = false;
+    for(int i = 0; i < 3; i++){
+      HkTelemetryPkt.trqHk[i].Direction = 0;
+      HkTelemetryPkt.trqHk[i].PercentOn = 0;
+      HkTelemetryPkt.trqDevice[i].trq_num = i;
+      HkTelemetryPkt.trqDevice[i].timer_period_ns = GENERIC_TORQUER_CFG_PERIOD;
+      HkTelemetryPkt.trqDevice[i].timerfd = 0;
+      HkTelemetryPkt.trqDevice[i].direction_pin_fd = 0;
+      HkTelemetryPkt.trqDevice[i].timer_high_ns = 0;
+      HkTelemetryPkt.trqDevice[i].positive_direction = false;
+      HkTelemetryPkt.trqDevice[i].enabled = false;
+
+      status = trq_init(&HkTelemetryPkt.trqDevice[i]);
+      if (status == OS_SUCCESS)
+      {
+          printf("Torquer %d initialized successfully \n", i);
+      }
+      else
+      {
+          printf("Torquer %d device failed to initialize with error %d!\n", i, status);
+      }
+
+    }
+
+    HkTelemetryPkt.CommandCount = 0;
+    HkTelemetryPkt.CommandErrorCount = 0;
+    HkTelemetryPkt.DeviceCount = 0;
+    HkTelemetryPkt.DeviceErrorCount = 0;
+    HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_DISABLED;
+
+    this->tlmWrite_DeviceEnabled(get_active_state(HkTelemetryPkt.DeviceEnabled));
     
-    status = trq_init(&trqDevice);
-    if (status == OS_SUCCESS)
-    {
-        printf("Torquer initialized successfully \n");
-    }
-    else
-    {
-        printf("Torquer device failed to initialize with error %d!\n", status);
-    }
   }
 
   Generic_torquer ::
     ~Generic_torquer()
   {
-    trq_close(&trqDevice);
+    for(uint8_t i = 0; i < 3; i++)
+    {
+      trq_close(&HkTelemetryPkt.trqDevice[i]);
+    }
     nos_destroy_link();
   }
 
@@ -71,41 +74,235 @@ namespace Components {
   // Handler implementations for commands
   // ----------------------------------------------------------------------
 
-  void Generic_torquer :: GENERIC_TORQUER_CONFIG_cmdHandler(FwOpcodeType opCode, U32 cmdSeq, const uint8_t Percent, const uint8_t Direction) {
+  void Generic_torquer :: NOOP_cmdHandler(FwOpcodeType opCode, U32 cmdSeq){
+    HkTelemetryPkt.CommandCount++;
+
+    this->log_ACTIVITY_HI_TELEM("NOOP command success!");
+    this->tlmWrite_CommandCount(HkTelemetryPkt.CommandCount);
+
+    this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::OK);
+  }
+
+  void Generic_torquer :: RESET_COUNTERS_cmdHandler(FwOpcodeType opCode, U32 cmdSeq) {
     int32_t status = OS_SUCCESS;
-    uint8_t req_percent, req_direction;
-      
 
-    req_percent = Percent;
-    req_direction = Direction;
+    HkTelemetryPkt.CommandCount = 0;
+    HkTelemetryPkt.CommandErrorCount = 0;
+    HkTelemetryPkt.DeviceCount = 0;
+    HkTelemetryPkt.DeviceErrorCount = 0;
 
-    // TODO - add error checking to the above
+    this->log_ACTIVITY_HI_TELEM("Reset Counters command successful!");
+    this->tlmWrite_CommandCount(HkTelemetryPkt.CommandCount);
+    this->tlmWrite_CommandErrorCount(HkTelemetryPkt.CommandErrorCount);
+    this->tlmWrite_DeviceCount(HkTelemetryPkt.DeviceCount);
+    this->tlmWrite_DeviceErrorCount(HkTelemetryPkt.DeviceErrorCount);
 
-    status = GENERIC_TORQUER_Config(&trqHk, &trqDevice, req_percent, req_direction);
-    if (status == OS_SUCCESS)
+    this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::OK);
+  }
+
+  void Generic_torquer :: ENABLE_cmdHandler(FwOpcodeType opCode, U32 cmdSeq) {
+    int32_t status = OS_SUCCESS;
+
+    if(HkTelemetryPkt.DeviceEnabled == GENERIC_TORQUER_DEVICE_DISABLED)
     {
-        this->log_ACTIVITY_HI_TELEM("trq command success\n");
+      HkTelemetryPkt.CommandCount++;
+
+      for(uint8_t i = 0; i < 3; i++)
+      {
+        status += trq_command(&HkTelemetryPkt.trqDevice[i], 0, 0);
+        HkTelemetryPkt.trqHk[i].Direction = 0;
+        HkTelemetryPkt.trqHk[i].PercentOn = 0;
+      }
+
+      if(status == OS_SUCCESS)
+      {
+        HkTelemetryPkt.DeviceCount++;
+        HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_ENABLED;
+      }
+      else
+      {
+        HkTelemetryPkt.DeviceErrorCount++;
+      }
+
     }
     else
     {
-        this->log_ACTIVITY_HI_TELEM("trq command failed!\n");
+      HkTelemetryPkt.CommandErrorCount++;
     }
 
-    //trqHk.PercentOn = req_percent;
-    //rqHk.Direction = req_direction;
+    this->tlmWrite_CommandCount(HkTelemetryPkt.CommandCount);
+    this->tlmWrite_CommandErrorCount(HkTelemetryPkt.CommandErrorCount);
+    this->tlmWrite_DeviceCount(HkTelemetryPkt.DeviceCount);
+    this->tlmWrite_DeviceErrorCount(HkTelemetryPkt.DeviceErrorCount);
+    this->tlmWrite_DeviceEnabled(get_active_state(HkTelemetryPkt.DeviceEnabled));
 
+    this->tlmWrite_Percent_0(HkTelemetryPkt.trqHk[0].PercentOn);
+    this->tlmWrite_Percent_1(HkTelemetryPkt.trqHk[1].PercentOn);
+    this->tlmWrite_Percent_2(HkTelemetryPkt.trqHk[2].PercentOn);
 
-    this->tlmWrite_Percent(trqHk.PercentOn);
-    this->tlmWrite_Direction(trqHk.Direction);
-   
+    this->tlmWrite_Direction_0(HkTelemetryPkt.trqHk[0].Direction);
+    this->tlmWrite_Direction_1(HkTelemetryPkt.trqHk[1].Direction);
+    this->tlmWrite_Direction_2(HkTelemetryPkt.trqHk[2].Direction);
 
-
-    // Tell the fprime command system that we have completed the processing of the supplied command with OK status
     this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::OK);
-
-    OS_printf("trqHk.Direction = %d \n", trqHk.Direction);
-    OS_printf("trqHk.PercentOn = %d \n", trqHk.PercentOn);
   }
+
+  void Generic_torquer :: DISABLE_cmdHandler(FwOpcodeType opCode, U32 cmdSeq){
+    int32_t status = OS_SUCCESS;
+
+    if(HkTelemetryPkt.DeviceEnabled == GENERIC_TORQUER_DEVICE_ENABLED)
+    {
+      HkTelemetryPkt.CommandCount++;
+
+      for(uint8_t i = 0; i < 3; i++)
+      {
+        trq_command(&HkTelemetryPkt.trqDevice[i], 0, 0);
+        HkTelemetryPkt.trqHk[i].Direction = 0;
+        HkTelemetryPkt.trqHk[i].PercentOn = 0;
+      }
+
+      HkTelemetryPkt.DeviceCount++;
+      HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_DISABLED;
+    }
+    else
+    {
+      HkTelemetryPkt.CommandErrorCount++;
+    }
+
+    this->tlmWrite_CommandCount(HkTelemetryPkt.CommandCount);
+    this->tlmWrite_CommandErrorCount(HkTelemetryPkt.CommandErrorCount);
+    this->tlmWrite_DeviceCount(HkTelemetryPkt.DeviceCount);
+    this->tlmWrite_DeviceErrorCount(HkTelemetryPkt.DeviceErrorCount);
+    this->tlmWrite_DeviceEnabled(get_active_state(HkTelemetryPkt.DeviceEnabled));
+
+    this->tlmWrite_Percent_0(HkTelemetryPkt.trqHk[0].PercentOn);
+    this->tlmWrite_Percent_1(HkTelemetryPkt.trqHk[1].PercentOn);
+    this->tlmWrite_Percent_2(HkTelemetryPkt.trqHk[2].PercentOn);
+
+    this->tlmWrite_Direction_0(HkTelemetryPkt.trqHk[0].Direction);
+    this->tlmWrite_Direction_1(HkTelemetryPkt.trqHk[1].Direction);
+    this->tlmWrite_Direction_2(HkTelemetryPkt.trqHk[2].Direction);
+
+    this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::OK);
+  }
+
+  void Generic_torquer :: REQUEST_HOUSEKEEPING_cmdHandler(FwOpcodeType opCode, U32 cmdSeq){
+    this->tlmWrite_CommandCount(HkTelemetryPkt.CommandCount);
+    this->tlmWrite_CommandErrorCount(HkTelemetryPkt.CommandErrorCount);
+    this->tlmWrite_DeviceCount(HkTelemetryPkt.DeviceCount);
+    this->tlmWrite_DeviceErrorCount(HkTelemetryPkt.DeviceErrorCount);
+    this->tlmWrite_DeviceEnabled(get_active_state(HkTelemetryPkt.DeviceEnabled));
+
+    this->tlmWrite_Percent_0(HkTelemetryPkt.trqHk[0].PercentOn);
+    this->tlmWrite_Percent_1(HkTelemetryPkt.trqHk[1].PercentOn);
+    this->tlmWrite_Percent_2(HkTelemetryPkt.trqHk[2].PercentOn);
+
+    this->tlmWrite_Direction_0(HkTelemetryPkt.trqHk[0].Direction);
+    this->tlmWrite_Direction_1(HkTelemetryPkt.trqHk[1].Direction);
+    this->tlmWrite_Direction_2(HkTelemetryPkt.trqHk[2].Direction);
+
+
+    this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::OK);
+  }
+
+  void Generic_torquer :: ALL_CONFIG_cmdHandler(FwOpcodeType opCode, U32 cmdSeq, U8 Percent_0, U8 Direction_0, U8 Percent_1, U8 Direction_1, U8 Percent_2, U8 Direction_2){
+    int32_t status = OS_SUCCESS;
+
+    if(HkTelemetryPkt.DeviceEnabled == GENERIC_TORQUER_DEVICE_ENABLED)
+    {
+      HkTelemetryPkt.CommandCount++;
+
+      status += GENERIC_TORQUER_Config(&HkTelemetryPkt.trqHk[0], &HkTelemetryPkt.trqDevice[0], Percent_0, Direction_0);
+      status += GENERIC_TORQUER_Config(&HkTelemetryPkt.trqHk[1], &HkTelemetryPkt.trqDevice[1], Percent_1, Direction_1);
+      status += GENERIC_TORQUER_Config(&HkTelemetryPkt.trqHk[2], &HkTelemetryPkt.trqDevice[2], Percent_2, Direction_2);
+
+      if(status == OS_SUCCESS)
+      {
+        HkTelemetryPkt.DeviceCount++;
+      }
+      else
+      {
+        HkTelemetryPkt.DeviceErrorCount++;
+      }
+    }
+    else
+    {
+      HkTelemetryPkt.CommandErrorCount++;
+    }
+
+    this->tlmWrite_CommandCount(HkTelemetryPkt.CommandCount);
+    this->tlmWrite_CommandErrorCount(HkTelemetryPkt.CommandErrorCount);
+    this->tlmWrite_DeviceCount(HkTelemetryPkt.DeviceCount);
+    this->tlmWrite_DeviceErrorCount(HkTelemetryPkt.DeviceErrorCount);
+    this->tlmWrite_DeviceEnabled(get_active_state(HkTelemetryPkt.DeviceEnabled));
+
+    this->tlmWrite_Percent_0(HkTelemetryPkt.trqHk[0].PercentOn);
+    this->tlmWrite_Percent_1(HkTelemetryPkt.trqHk[1].PercentOn);
+    this->tlmWrite_Percent_2(HkTelemetryPkt.trqHk[2].PercentOn);
+
+    this->tlmWrite_Direction_0(HkTelemetryPkt.trqHk[0].Direction);
+    this->tlmWrite_Direction_1(HkTelemetryPkt.trqHk[1].Direction);
+    this->tlmWrite_Direction_2(HkTelemetryPkt.trqHk[2].Direction);
+
+    this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::OK);
+  }
+
+  void Generic_torquer :: GENERIC_TORQUER_CONFIG_cmdHandler(FwOpcodeType opCode, U32 cmdSeq, Generic_torquer_tq_num torquerNum, U8 Percent, U8 Direction) {
+    int32_t status = OS_SUCCESS;
+
+    if(HkTelemetryPkt.DeviceEnabled == GENERIC_TORQUER_DEVICE_ENABLED)
+    {
+      HkTelemetryPkt.CommandCount++;
+
+      status = GENERIC_TORQUER_Config(&HkTelemetryPkt.trqHk[torquerNum.e], &HkTelemetryPkt.trqDevice[torquerNum.e], Percent, Direction);
+
+      if(status == OS_SUCCESS)
+      {
+        HkTelemetryPkt.DeviceCount++;
+      }
+      else
+      {
+        HkTelemetryPkt.DeviceErrorCount++;
+      }
+    }
+    else
+    {
+      HkTelemetryPkt.CommandErrorCount++;
+    }
+    
+    this->tlmWrite_CommandCount(HkTelemetryPkt.CommandCount);
+    this->tlmWrite_CommandErrorCount(HkTelemetryPkt.CommandErrorCount);
+    this->tlmWrite_DeviceCount(HkTelemetryPkt.DeviceCount);
+    this->tlmWrite_DeviceErrorCount(HkTelemetryPkt.DeviceErrorCount);
+    this->tlmWrite_DeviceEnabled(get_active_state(HkTelemetryPkt.DeviceEnabled));
+
+    this->tlmWrite_Percent_0(HkTelemetryPkt.trqHk[0].PercentOn);
+    this->tlmWrite_Percent_1(HkTelemetryPkt.trqHk[1].PercentOn);
+    this->tlmWrite_Percent_2(HkTelemetryPkt.trqHk[2].PercentOn);
+
+    this->tlmWrite_Direction_0(HkTelemetryPkt.trqHk[0].Direction);
+    this->tlmWrite_Direction_1(HkTelemetryPkt.trqHk[1].Direction);
+    this->tlmWrite_Direction_2(HkTelemetryPkt.trqHk[2].Direction);
+
+    this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::OK);
+  }
+
+  inline Generic_torquer_ActiveState Generic_torquer :: get_active_state(uint8_t DeviceEnabled){
+    Generic_torquer_ActiveState state;
+
+    if(DeviceEnabled == GENERIC_TORQUER_DEVICE_ENABLED)
+    {
+      state.e = Generic_torquer_ActiveState::ENABLED;
+    }
+    else
+    {
+      state.e = Generic_torquer_ActiveState::DISABLED;
+    }
+
+    return state;
+  }
+
+
 
 
 
