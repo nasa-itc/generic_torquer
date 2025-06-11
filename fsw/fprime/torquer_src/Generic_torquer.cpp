@@ -80,7 +80,7 @@ namespace Components {
     this->log_ACTIVITY_HI_TELEM("NOOP command success!");
     OS_printf("NOOP Command Successful!\n");
     this->tlmWrite_CommandCount(HkTelemetryPkt.CommandCount);
-
+    this->tlmWrite_DeviceEnabled(get_active_state(HkTelemetryPkt.DeviceEnabled));
     this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::OK);
   }
 
