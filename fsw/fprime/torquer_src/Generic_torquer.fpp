@@ -2,32 +2,92 @@ module Components {
     @ Satellite Torquer
     active component Generic_torquer {
 
+        @ Component Enable State
+        enum ActiveState {
+            DISABLED @< DISABLED
+            ENABLED @< ENABLED
+        }
+
+        @ Torquer Number
+        enum tq_num {
+            Torquer_0 @< Torquer 0
+            Torquer_1 @< Torquer 1
+            Torquer_2 @< Torquer 2
+        }
+
         # One async command/port is required for active components
         # This should be overridden by the developers with a useful command/port
-        
-        #Greeting 1
+
+         @ NOOP Cmd
+        async command NOOP(
+        )
+
+         @ RESET COUNTERS cmd
+        async command RESET_COUNTERS(
+        )
+
+        async command ENABLE(
+        )
+
+        async command DISABLE(
+        )
+
+        async command REQUEST_HOUSEKEEPING(
+        )
+
+        async command ALL_CONFIG(
+            Percent_0: U8 @< Percent speed of rotation: (0-100)
+            Direction_0: U8 @< Direction of rotation (0 or 1)
+            Percent_1: U8 @< Percent speed of rotation: (0-100)
+            Direction_1: U8 @< Direction of rotation (0 or 1)
+            Percent_2: U8 @< Percent speed of rotation: (0-100)
+            Direction_2: U8 @< Direction of rotation (0 or 1)
+        )
+
         @ Command to issue greeting with maximum length of 20 characters
         async command GENERIC_TORQUER_CONFIG(
+            torquerNum: tq_num @< Torquer Number
             Percent: U8 @< Percent speed of rotation: (0 - 100)
             Direction: U8 @< Direction of rotation (0 or 1)
         )
 
-        @ Greeting event with maximum greeting length of 20 characters
-        event Hello(
-            Percent: U8 @< Greeting supplied from the GENERIC_TORQUER_CONFIG command
-            Direction:  U8 @< Greeting supplied from the GENERIC_TORQUER_CONFIG command
-        ) severity activity high format "I say: {} {}"
-
         @ Greeting event with maximum greeting length of 30 characters
         event TELEM(
-            log_info: string size 30 @< 
+            log_info: string size 40 @< 
         ) severity activity high format "Generic_torquer: {}"
 
+         @ Command Count
+        telemetry CommandCount: U32
+
+         @ Command Error Count
+        telemetry CommandErrorCount: U32
+
+         @ Device Count
+        telemetry DeviceCount: U32
+
+         @ Device Error Count
+        telemetry DeviceErrorCount: U32
+
+         @ Device Enable State
+        telemetry DeviceEnabled: ActiveState
+
         @ A count of the number of greetings issued
-        telemetry Percent: U8
+        telemetry Percent_0: U8
         
         @ A count of the number of greetings issued
-        telemetry Direction: U8
+        telemetry Direction_0: U8
+        
+        @ A count of the number of greetings issued
+        telemetry Percent_1: U8
+        
+        @ A count of the number of greetings issued
+        telemetry Direction_1: U8
+        
+        @ A count of the number of greetings issued
+        telemetry Percent_2: U8
+        
+        @ A count of the number of greetings issued
+        telemetry Direction_2: U8
 
         ##############################################################################
         #### Uncomment the following examples to start customizing your component ####
