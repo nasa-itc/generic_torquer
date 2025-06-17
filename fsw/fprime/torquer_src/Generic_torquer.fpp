@@ -5,6 +5,9 @@ module Components {
         # One async command/port is required for active components
         # This should be overridden by the developers with a useful command/port
         
+        @ Torquer input port
+        async input port TORQin: TORQDataPort
+
         #Greeting 1
         @ Command to issue greeting with maximum length of 20 characters
         async command GENERIC_TORQUER_CONFIG(

@@ -55,6 +55,16 @@ namespace Components {
 
       ) ;
 
+      void TORQin_handler(
+        NATIVE_INT_TYPE portNum,
+        U8 Percent_0,
+        U8 Direction_0,
+        U8 Percent_1,
+        U8 Direction_1,
+        U8 Percent_2,
+        U8 Direction_2
+      ) override;
+
   };
 
 }

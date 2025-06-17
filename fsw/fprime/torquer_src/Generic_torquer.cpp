@@ -107,6 +107,23 @@ namespace Components {
     OS_printf("trqHk.PercentOn = %d \n", trqHk.PercentOn);
   }
 
+  void Generic_torquer :: TORQin_handler( NATIVE_INT_TYPE portNum, U8 Percent_0, U8 Direction_0, U8 Percent_1, U8 Direction_1, U8 Percent_2, U8 Direction_2)
+  {
+    int32_t status = OS_SUCCESS;
+
+    status += GENERIC_TORQUER_Config(&trqHk, &trqDevice, Percent_0, Direction_0);
+    status += GENERIC_TORQUER_Config(&trqHk, &trqDevice, Percent_1, Direction_1);
+    status += GENERIC_TORQUER_Config(&trqHk, &trqDevice, Percent_2, Direction_2);
+
+    // this->tlmWrite_Percent_0(HkTelemetryPkt.trqHk[0].PercentOn);
+    // this->tlmWrite_Percent_1(HkTelemetryPkt.trqHk[1].PercentOn);
+    // this->tlmWrite_Percent_2(HkTelemetryPkt.trqHk[2].PercentOn);
+
+    // this->tlmWrite_Direction_0(HkTelemetryPkt.trqHk[0].Direction);
+    // this->tlmWrite_Direction_1(HkTelemetryPkt.trqHk[1].Direction);
+    // this->tlmWrite_Direction_2(HkTelemetryPkt.trqHk[2].Direction);
+  }
+
 
 
 }
