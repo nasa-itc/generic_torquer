@@ -54,7 +54,7 @@ namespace Components {
     HkTelemetryPkt.CommandErrorCount = 0;
     HkTelemetryPkt.DeviceCount = 0;
     HkTelemetryPkt.DeviceErrorCount = 0;
-    HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_DISABLED;
+    HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_ENABLED;
 
     this->tlmWrite_DeviceEnabled(get_active_state(HkTelemetryPkt.DeviceEnabled));
     
