@@ -8,6 +8,7 @@
 #include "torquer_src/Generic_torquer.hpp"
 #include <Fw/Logger/Logger.hpp>
 #include "FpConfig.hpp"
+#include <Fw/Log/LogString.hpp>
 
 
 namespace Components {
@@ -77,8 +78,9 @@ namespace Components {
   void Generic_torquer :: NOOP_cmdHandler(FwOpcodeType opCode, U32 cmdSeq){
     HkTelemetryPkt.CommandCount++;
 
-    this->log_ACTIVITY_HI_TELEM("NOOP command success!");
-    OS_printf("NOOP Command Successful!\n");
+    Fw::LogStringArg log_msg("NOOP command success!");
+    this->log_ACTIVITY_HI_TELEM(log_msg);
+    // OS_printf("NOOP Command Successful!\n");
     this->tlmWrite_CommandCount(HkTelemetryPkt.CommandCount);
     this->tlmWrite_DeviceEnabled(get_active_state(HkTelemetryPkt.DeviceEnabled));
     this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::OK);
@@ -92,8 +94,9 @@ namespace Components {
     HkTelemetryPkt.DeviceCount = 0;
     HkTelemetryPkt.DeviceErrorCount = 0;
 
-    this->log_ACTIVITY_HI_TELEM("Reset Counters command successful!");
-    OS_printf("Reset Counters command successful!\n");
+    Fw::LogStringArg log_msg("Reset Counters command successful!");
+    this->log_ACTIVITY_HI_TELEM(log_msg);
+    // OS_printf("Reset Counters command successful!\n");
     this->tlmWrite_CommandCount(HkTelemetryPkt.CommandCount);
     this->tlmWrite_CommandErrorCount(HkTelemetryPkt.CommandErrorCount);
     this->tlmWrite_DeviceCount(HkTelemetryPkt.DeviceCount);
@@ -120,22 +123,25 @@ namespace Components {
       {
         HkTelemetryPkt.DeviceCount++;
         HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_ENABLED;
-        this->log_ACTIVITY_HI_TELEM("Enable Torquer Command Successful!");
-        OS_printf("Enable Torquer Command Successful!\n");
+        Fw::LogStringArg log_msg("Enable Torquer Command Successful!");
+        this->log_ACTIVITY_HI_TELEM(log_msg);
+        // OS_printf("Enable Torquer Command Successful!\n");
       }
       else
       {
         HkTelemetryPkt.DeviceErrorCount++;
-        this->log_ACTIVITY_HI_TELEM("Enable Failed: Commanding Failed");
-        OS_printf("Enable Failed Commanding Torquer\n");
+        Fw::LogStringArg log_msg("Enable Failed: Commanding Failed");
+        this->log_ACTIVITY_HI_TELEM(log_msg);
+        // OS_printf("Enable Failed Commanding Torquer\n");
       }
 
     }
     else
     {
       HkTelemetryPkt.CommandErrorCount++;
-      this->log_ACTIVITY_HI_TELEM("Enable Failed: Already Enabled!");
-      OS_printf("Enable Failed: Already Enabled!\n");
+      Fw::LogStringArg log_msg("Enable Failed: Already Enabled!");
+      this->log_ACTIVITY_HI_TELEM(log_msg);
+      // OS_printf("Enable Failed: Already Enabled!\n");
     }
 
     this->tlmWrite_CommandCount(HkTelemetryPkt.CommandCount);
@@ -172,14 +178,16 @@ namespace Components {
       HkTelemetryPkt.DeviceCount++;
       HkTelemetryPkt.DeviceEnabled = GENERIC_TORQUER_DEVICE_DISABLED;
 
-      this->log_ACTIVITY_HI_TELEM("Disabled Successfully!");
-        OS_printf("Disabled Successfully!\n");
+      Fw::LogStringArg log_msg("Disabled Successfully!");
+      this->log_ACTIVITY_HI_TELEM(log_msg);
+        // OS_printf("Disabled Successfully!\n");
     }
     else
     {
       HkTelemetryPkt.CommandErrorCount++;
-      this->log_ACTIVITY_HI_TELEM("Disable Failed: Already Disabled!");
-      OS_printf("Disable Failed: Already Disabled!\n");
+      Fw::LogStringArg log_msg("Disable Failed: Already Disabled!");
+      this->log_ACTIVITY_HI_TELEM(log_msg);
+      // OS_printf("Disable Failed: Already Disabled!\n");
     }
 
     this->tlmWrite_CommandCount(HkTelemetryPkt.CommandCount);
@@ -214,8 +222,9 @@ namespace Components {
     this->tlmWrite_Direction_1(HkTelemetryPkt.trqHk[1].Direction);
     this->tlmWrite_Direction_2(HkTelemetryPkt.trqHk[2].Direction);
 
-    this->log_ACTIVITY_HI_TELEM("Requested Housekeeping!");
-    OS_printf("Requested Housekeeping!\n");
+    Fw::LogStringArg log_msg("Requested Housekeeping!");
+    this->log_ACTIVITY_HI_TELEM(log_msg);
+    // OS_printf("Requested Housekeeping!\n");
 
 
     this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::OK);
@@ -235,21 +244,24 @@ namespace Components {
       if(status == OS_SUCCESS)
       {
         HkTelemetryPkt.DeviceCount++;
-        this->log_ACTIVITY_HI_TELEM("Successfully Set all Torquers!");
-        OS_printf("Successfully Set all Torquers!\n");
+        Fw::LogStringArg log_msg("Successfully Set all Torquers!");
+        this->log_ACTIVITY_HI_TELEM(log_msg);
+        // OS_printf("Successfully Set all Torquers!\n");
       }
       else
       {
         HkTelemetryPkt.DeviceErrorCount++;
-        this->log_ACTIVITY_HI_TELEM("Failed to Set All Torquers!");
-        OS_printf("Failed to Set All Torquers!\n");
+        Fw::LogStringArg log_msg("Failed to Set All Torquers!");
+        this->log_ACTIVITY_HI_TELEM(log_msg);
+        // OS_printf("Failed to Set All Torquers!\n");
       }
     }
     else
     {
       HkTelemetryPkt.CommandErrorCount++;
-      this->log_ACTIVITY_HI_TELEM("Failed: Device Disabled");
-      OS_printf("Failed: Device Disabled!\n");
+      Fw::LogStringArg log_msg("Failed: Device Disabled");
+      this->log_ACTIVITY_HI_TELEM(log_msg);
+      // OS_printf("Failed: Device Disabled!\n");
     }
 
     this->tlmWrite_CommandCount(HkTelemetryPkt.CommandCount);
@@ -283,23 +295,26 @@ namespace Components {
         HkTelemetryPkt.DeviceCount++;
         char configMsg[40];
         sprintf(configMsg, "Successfully Set Torquer %d!", torquerNum.e);
-        this->log_ACTIVITY_HI_TELEM(configMsg);
-        OS_printf("Successfully Set Torquer %d!\n", torquerNum.e);
+        Fw::LogStringArg log_msg(configMsg);
+        this->log_ACTIVITY_HI_TELEM(log_msg);
+        // OS_printf("Successfully Set Torquer %d!\n", torquerNum.e);
       }
       else
       {
         HkTelemetryPkt.DeviceErrorCount++;
         char configMsg[40];
         sprintf(configMsg, "Faied to set Torquer %d!", torquerNum.e);
-        this->log_ACTIVITY_HI_TELEM(configMsg);
-        OS_printf("Failed to Set Torquer %d!\n", torquerNum.e);
+        Fw::LogStringArg log_msg(configMsg);
+        this->log_ACTIVITY_HI_TELEM(log_msg);
+        // OS_printf("Failed to Set Torquer %d!\n", torquerNum.e);
       }
     }
     else
     {
       HkTelemetryPkt.CommandErrorCount++;
-      this->log_ACTIVITY_HI_TELEM("Failed: Device Disabled!");
-      OS_printf("Failed: Device Disabled!\n");
+      Fw::LogStringArg log_msg("Failed: Device Disabled!");
+      this->log_ACTIVITY_HI_TELEM(log_msg);
+      // OS_printf("Failed: Device Disabled!\n");
     }
     
     this->tlmWrite_CommandCount(HkTelemetryPkt.CommandCount);
