@@ -123,6 +123,11 @@ namespace Components {
         U8 Percent_2,
         U8 Direction_2
       ) override;
+
+      void updateTlm_handler(
+        const NATIVE_INT_TYPE portNum,
+        NATIVE_UINT_TYPE context
+      ) override;
       
       inline Generic_torquer_ActiveState get_active_state(uint8_t DeviceEnabled);
 

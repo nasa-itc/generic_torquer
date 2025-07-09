@@ -21,6 +21,9 @@ module Components {
         @ Torquer input port
         async input port TORQin: TORQDataPort
 
+        @ Update Tlm
+        async input port updateTlm: Svc.Sched
+
          @ NOOP Cmd
         async command NOOP(
         )

@@ -342,17 +342,26 @@ namespace Components {
     status += GENERIC_TORQUER_Config(&HkTelemetryPkt.trqHk[1], &HkTelemetryPkt.trqDevice[1], Percent_1, Direction_1);
     status += GENERIC_TORQUER_Config(&HkTelemetryPkt.trqHk[2], &HkTelemetryPkt.trqDevice[2], Percent_2, Direction_2);
 
+    if(status == OS_SUCCESS)
+    {
+      HkTelemetryPkt.DeviceCount++;
+    }
+    else
+    {
+      HkTelemetryPkt.DeviceErrorCount++;
+    }
+  }
+
+  void Generic_torquer :: updateTlm_handler(const NATIVE_INT_TYPE portNum, NATIVE_UINT_TYPE context)
+  {
+    this->tlmWrite_DeviceCount(HkTelemetryPkt.DeviceCount);
+    this->tlmWrite_DeviceErrorCount(HkTelemetryPkt.DeviceErrorCount);
     this->tlmWrite_Percent_0(HkTelemetryPkt.trqHk[0].PercentOn);
     this->tlmWrite_Percent_1(HkTelemetryPkt.trqHk[1].PercentOn);
     this->tlmWrite_Percent_2(HkTelemetryPkt.trqHk[2].PercentOn);
-
     this->tlmWrite_Direction_0(HkTelemetryPkt.trqHk[0].Direction);
     this->tlmWrite_Direction_1(HkTelemetryPkt.trqHk[1].Direction);
     this->tlmWrite_Direction_2(HkTelemetryPkt.trqHk[2].Direction);
   }
-
-
-
-
 
 }
