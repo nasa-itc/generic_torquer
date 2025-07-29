@@ -15,7 +15,7 @@ namespace Nos3
     void Generic_torquer42DataProvider::cmd_torque(int trq_num, double trq_value)
     {
         char buffer [56];
-        sprintf (buffer, "SC[%i].AC.MTB[%i].Mcmd = %lf\n[EOF]\n", _sc, trq_num, trq_value);
+        sprintf (buffer, "SC[%i].MTB[%i].Mcmd = %lf\n[EOF]\n", _sc, trq_num, trq_value);
         sim_logger->debug("Generic_torquer42DataProvider::cmd_torque:  buffer = %s\n", buffer);
 
         send_command_to_socket(std::string(buffer));
