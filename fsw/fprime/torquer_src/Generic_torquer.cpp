@@ -252,7 +252,7 @@ namespace Components {
       {
         HkTelemetryPkt.DeviceErrorCount++;
         Fw::LogStringArg log_msg("Failed to Set All Torquers!");
-        this->log_ACTIVITY_HI_TELEM(log_msg
+        this->log_ACTIVITY_HI_TELEM(log_msg);
         // OS_printf("Failed to Set All Torquers!\n");
       }
     }
