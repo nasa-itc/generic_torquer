@@ -55,7 +55,7 @@ namespace Components {
       //! Destroy Generic_torquer object
       ~Generic_torquer();
 
-    PRIVATE:
+    private:
 
       // ----------------------------------------------------------------------
       // Handler implementations for commands

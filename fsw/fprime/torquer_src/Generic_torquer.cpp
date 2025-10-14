@@ -7,7 +7,8 @@
 #include <string>
 #include "torquer_src/Generic_torquer.hpp"
 #include <Fw/Logger/Logger.hpp>
-#include "FpConfig.hpp"
+// #include "FpConfig.hpp"
+#include "Fw/FPrimeBasicTypes.hpp"
 #include <Fw/Log/LogString.hpp>
 
 
