@@ -350,7 +350,7 @@ namespace Components {
     return state;
   }
 
-  void Generic_torquer :: TORQin_handler( NATIVE_INT_TYPE portNum, U8 Percent_0, U8 Direction_0, U8 Percent_1, U8 Direction_1, U8 Percent_2, U8 Direction_2)
+  void Generic_torquer :: TORQin_handler( FwIndexType portNum, U8 Percent_0, U8 Direction_0, U8 Percent_1, U8 Direction_1, U8 Percent_2, U8 Direction_2)
   {
     int32_t status = OS_SUCCESS;
 
@@ -368,7 +368,7 @@ namespace Components {
     }
   }
 
-  void Generic_torquer :: updateTlm_handler(const NATIVE_INT_TYPE portNum, NATIVE_UINT_TYPE context)
+  void Generic_torquer :: updateTlm_handler(const FwIndexType portNum, U32 context)
   {
     this->tlmWrite_DeviceCount(HkTelemetryPkt.DeviceCount);
     this->tlmWrite_DeviceErrorCount(HkTelemetryPkt.DeviceErrorCount);
