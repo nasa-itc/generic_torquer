@@ -55,7 +55,7 @@ namespace Components {
       //! Destroy Generic_torquer object
       ~Generic_torquer();
 
-    PRIVATE:
+    private:
 
       // ----------------------------------------------------------------------
       // Handler implementations for commands
@@ -72,27 +72,27 @@ namespace Components {
       void NOOP_cmdHandler(
         FwOpcodeType opCode,
         U32 cmdSeq
-      );
+      ) override;
 
       void RESET_COUNTERS_cmdHandler(
         FwOpcodeType opCode,
         U32 cmdSeq
-      );
+      ) override;
 
       void ENABLE_cmdHandler(
         FwOpcodeType opCode,
         U32 cmdSeq
-      );
+      ) override;
 
       void DISABLE_cmdHandler(
         FwOpcodeType opCode,
         U32 cmdSeq
-      );
+      ) override;
 
       void REQUEST_HOUSEKEEPING_cmdHandler(
         FwOpcodeType opCode,
         U32 cmdSeq
-      );
+      ) override;
 
       void ALL_CONFIG_cmdHandler(
         FwOpcodeType opCode,
@@ -103,7 +103,7 @@ namespace Components {
         U8 Direction_1,
         U8 Percent_2,
         U8 Direction_2
-      );
+      ) override;
 
       void GENERIC_TORQUER_CONFIG_cmdHandler(
           FwOpcodeType opCode, //!< The opcode
@@ -112,10 +112,10 @@ namespace Components {
           U8 Percent, //!< Greeting to repeat in the Hello event
           U8 Direction
 
-      ) ;
+      ) override;
 
       void TORQin_handler(
-        NATIVE_INT_TYPE portNum,
+        FwIndexType portNum,
         U8 Percent_0,
         U8 Direction_0,
         U8 Percent_1,
@@ -125,9 +125,10 @@ namespace Components {
       ) override;
 
       void updateTlm_handler(
-        const NATIVE_INT_TYPE portNum,
-        NATIVE_UINT_TYPE context
+        const FwIndexType portNum,
+        U32 context
       ) override;
+
       
       inline Generic_torquer_ActiveState get_active_state(uint8_t DeviceEnabled);
 
