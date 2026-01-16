@@ -369,13 +369,13 @@ void GENERIC_TORQUER_ProcessGroundCommand(void)
                         (GENERIC_TORQUER_All_Percent_On_cmd_t *)GENERIC_TORQUER_AppData.MsgPtr;
                     status += GENERIC_TORQUER_Config(
                         &GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqInfo[0], &GENERIC_TORQUER_AppData.trqDevice[0],
-                        all_percent_cmd_ptr->PercentOn_0, all_percent_cmd_ptr->Direction_1);
+                        all_percent_cmd_ptr->PercentOn_0, all_percent_cmd_ptr->Direction_0);
                     status += GENERIC_TORQUER_Config(
                         &GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqInfo[1], &GENERIC_TORQUER_AppData.trqDevice[1],
-                        all_percent_cmd_ptr->Direction_1, all_percent_cmd_ptr->PercentOn_1);
+                        all_percent_cmd_ptr->PercentOn_1, all_percent_cmd_ptr->Direction_1);
                     status += GENERIC_TORQUER_Config(
                         &GENERIC_TORQUER_AppData.HkTelemetryPkt.TrqInfo[2], &GENERIC_TORQUER_AppData.trqDevice[2],
-                        all_percent_cmd_ptr->Direction_2, all_percent_cmd_ptr->PercentOn_2);
+                        all_percent_cmd_ptr->PercentOn_2, all_percent_cmd_ptr->Direction_2);
                     if (status == OS_SUCCESS)
                     {
                         GENERIC_TORQUER_AppData.HkTelemetryPkt.DeviceCount++;
